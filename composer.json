@@ -1,12 +1,12 @@
 {
-  "name": "filefabrik/booteraise",
+  "name": "filefabrik/booteraiser",
   "version":"1.0.2",
   "description": "laravel boot helper for custom packages",
   "type": "library",
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Filefabrik\\Booteraise\\": "src/"
+      "Filefabrik\\Booteraiser\\": "src/"
     }
   },
   "authors": [
