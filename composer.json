@@ -1,5 +1,6 @@
 {
   "name": "filefabrik/booteraise",
+  "version":"1.0.0"
   "description": "laravel boot helper for custom packages",
   "type": "library",
   "license": "MIT",
