@@ -32,7 +32,7 @@ trait Bootraiser
      *
      * @return void
      */
-    protected function paxsyBootingService(string $packageRoot, string $packageName, string $vendorPackageNamespace): void
+    protected function bootraiserService(string $packageRoot, string $packageName, string $vendorPackageNamespace): void
     {
         /**
          *
