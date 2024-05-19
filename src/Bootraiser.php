@@ -5,7 +5,7 @@
  */
 /** @copyright-header * */
 
-namespace Filefabrik\Booteraiser;
+namespace Filefabrik\Bootraiser;
 
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Command;
