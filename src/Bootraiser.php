@@ -6,6 +6,7 @@
 
 namespace Filefabrik\Bootraiser;
 
+use Exception;
 use Filefabrik\Bootraiser\Support\FindBootable;
 use Filefabrik\Bootraiser\Support\PackageConfig;
 use Illuminate\Console\Application as Artisan;
@@ -22,199 +23,296 @@ use Symfony\Component\Finder\Finder;
  */
 trait Bootraiser
 {
-	/**
-	 * @return ServiceProvider $this
-	 */
-	protected function parentServiceProvider(): ServiceProvider
-	{
-		return $this;
-	}
+    /**
+     * @throws Exception
+     */
+    protected function getBootraiserPackageConfig(?array $config = null): PackageConfig
+    {
+        return BootraiserManager::getPackageConfig(static::class, $config ?? $this->bootraiserConfig);
+    }
 
-	/**
-	 * Booting Helper while created this package with filefabrik/paxsy.
-	 * You can customize the booting methods or write your own booting.
-	 * The paxsy booting methods do not have any dependency magic
-	 *
-	 * @param PackageConfig $packageConfig
-	 * @param array         $bootingParts
-	 *
-	 * @return void
-	 */
-	protected function bootraiserService(PackageConfig $packageConfig, array $bootingParts): void
-	{
-		foreach ($bootingParts as $bootingPart) {
-			$this->bootingPart($packageConfig, $bootingPart);
-		}
-	}
+    /**
+     * @return ServiceProvider $this
+     */
+    protected function parentServiceProvider(): ServiceProvider
+    {
+        return $this;
+    }
 
-	/**
-	 * @param PackageConfig $packageConfig
-	 * @param string        $bootingPart
-	 *
-	 * @return bool
-	 */
-	protected function bootingPart(PackageConfig $packageConfig, string $bootingPart): bool
-	{
-		$serviceProvider = $this->parentServiceProvider();
-		$method          = 'booting'.Str::ucfirst($bootingPart);
+    /**
+     * Methods called from the YourPackageServiceProvider::register()
+     *
+     * @param PackageConfig $packageConfig
+     * @param array         $registeringParts
+     *
+     * @return void
+     */
+    protected function registerBootraiserServices(PackageConfig $packageConfig, array $registeringParts): void
+    {
+        foreach ($registeringParts as $bootingPart) {
+            $this->registerBootraiserService($packageConfig, $bootingPart);
+        }
+    }
 
-		if (method_exists($serviceProvider, $method)) {
-			// package_base_path, package-name: lower kebab case (last part of the composer name="vendor/package-name"), namespace in composer psr-4 /src
-			$this->$method($packageConfig);
+    /**
+     * Booting Helper while created this package with filefabrik/paxsy.
+     * You can customize the booting methods or write your own booting.
+     * The paxsy booting methods do not have any dependency magic
+     *
+     * @param PackageConfig $packageConfig
+     * @param array         $bootingParts
+     *
+     * @return void
+     */
+    protected function bootBootraiserServices(PackageConfig $packageConfig, array $bootingParts): void
+    {
+        foreach ($bootingParts as $bootingPart) {
+            $this->bootBootraiserService($packageConfig, $bootingPart);
+        }
+    }
 
-			return true;
-		}
-		// by class
-		$instance = FindBootable::findBootable($bootingPart);
-		if ($instance) {
-			$instance->booting($packageConfig);
+    /**
+     * @param PackageConfig $packageConfig
+     * @param string        $registeringPart
+     *
+     * @return bool
+     */
+    protected function registerBootraiserService(PackageConfig $packageConfig, string $registeringPart): bool
+    {
+        return $this->callPackageMethod($packageConfig, 'registering', $registeringPart);
+    }
 
-			return true;
-		}
+    /**
+     * @param PackageConfig $packageConfig
+     * @param string        $bootingPart
+     *
+     * @return bool
+     */
+    protected function bootBootraiserService(PackageConfig $packageConfig, string $bootingPart): bool
+    {
+        if ($this->callPackageMethod($packageConfig, 'booting', $bootingPart)) {
+            return true;
+        }
+        // by class
+        $instance = FindBootable::findBootable($bootingPart);
+        if ($instance) {
+            $instance->booting($packageConfig);
 
-		return false;
-	}
+            return true;
+        }
 
-	/**
-	 * Boot the Web-Route
-	 *
-	 * @see https://laravel.com/docs/11.x/packages#routes
-	 *
-	 * @param PackageConfig $packageConfig
-	 *
-	 * @return void
-	 */
-	protected function bootingRoutes(PackageConfig $packageConfig): void
-	{
-		$routeFiles = $packageConfig->concatPath('routes/web.php');
-		if (file_exists($routeFiles)) {
-			$this->parentServiceProvider()
-				 ->loadRoutesFrom($routeFiles)
-			;
-		}
-	}
+        return false;
+    }
 
-	/**
-	 * Publish Migrations if need
-	 *
-	 * @see https://laravel.com/docs/11.x/packages#migrations
-	 *
-	 * @param PackageConfig $packageConfig
-	 *
-	 * @return void
-	 */
-	protected function bootingMigrations(PackageConfig $packageConfig): void
-	{
-		$migrationDir = $packageConfig->concatPath('database/migrations');
-		if (is_dir($migrationDir)) {
-			$this->parentServiceProvider()
-				 ->publishesMigrations(
-				 	[$migrationDir => database_path('migrations')],
-				 	$packageConfig->concatGroupName('migrations'),
-				 )
-			;
-		}
-	}
+    /**
+     * @param PackageConfig $packageConfig
+     * @param string        $prefix
+     * @param string        $methodPart
+     *
+     * @return bool
+     */
+    protected function callPackageMethod(PackageConfig $packageConfig, string $prefix, string $methodPart): bool
+    {
+        $serviceProvider = $this->parentServiceProvider();
+        $method          = $prefix . Str::ucfirst($methodPart);
 
-	/**
-	 * Loading translations from package/lang
-	 *
-	 * @see https://laravel.com/docs/11.x/packages#language-files
-	 *
-	 * @param PackageConfig $packageConfig
-	 *
-	 * @return void
-	 */
-	protected function bootingTranslations(PackageConfig $packageConfig): void
-	{
-		$langDir = $packageConfig->concatPath('lang');
-		if (is_dir($langDir)) {
-			$serviceProvider = $this->parentServiceProvider();
-			$serviceProvider->loadTranslationsFrom($langDir, $packageConfig->getVendorPackageName());
-			$serviceProvider->publishes(
-				[$langDir => $serviceProvider->app->langPath('vendor/'.$packageConfig->getVendorPackageName())],
-				$packageConfig->concatGroupName('translations'),
-			);
-		}
-	}
+        if (method_exists($serviceProvider, $method)) {
+            // package_base_path,
+            //package-name: lower kebab case (last part of the composer name="vendor/package-name"),
+            //namespace in composer psr-4 /src
+            $this->$method($packageConfig);
 
-	/**
-	 * Enable blade views in laravel or publish
-	 *
-	 * @param PackageConfig $packageConfig
-	 *
-	 * @return void
-	 */
-	protected function bootingViews(PackageConfig $packageConfig): void
-	{
-		$viewsDir = $packageConfig->concatPath('resources/views');
-		if (is_dir($viewsDir)) {
-			$serviceProvider = $this->parentServiceProvider();
-			$serviceProvider->loadViewsFrom($viewsDir, $packageConfig->getNamespace());
-			$serviceProvider->publishes(
-				[$viewsDir => resource_path('views/vendor/'.$packageConfig->getVendorPackageName())],
-				$packageConfig->concatGroupName('views'),
-			);
+            return true;
+        }
 
-			$serviceProvider->callAfterResolving(
-				'view',
-				function(ViewFactory $view_factory) use ($packageConfig) {
-					$view_factory->addNamespace(
-						$packageConfig->getVendorPackageName(),
-						$packageConfig->concatPath('resources/views'),
-					);
-				},
-			);
-		}
-	}
+        return false;
+    }
 
-	/**
-	 * Boot commands if there is any
-	 *
-	 * @see https://laravel.com/docs/11.x/packages#commands
-	 *
-	 * @throws ReflectionException
-	 */
-	protected function bootingCommands(PackageConfig $packageConfig): void
-	{
-		$commandDir = $packageConfig->concatPath('src/Console/Commands');
-		if (app()->runningInConsole() && is_dir($commandDir)) {
-			$finder = Finder::create()
-							->files()
-							->in($commandDir)
-							->name('*.php')
-			;
+    /**
+     * Boot the Web-Route
+     *
+     * @see https://laravel.com/docs/11.x/packages#routes
+     *
+     * @param PackageConfig $packageConfig
+     *
+     * @return void
+     */
+    protected function bootingRoutes(PackageConfig $packageConfig): void
+    {
+        $routeFiles = $packageConfig->concatPath('routes/web.php');
+        if (file_exists($routeFiles)) {
+            $parentServiceProvider = $this->parentServiceProvider();
+            $overrideRoutePath     = base_path('/routes/web-' . $packageConfig->groupOrVendorName() . '.php');
+            // use override route
+            // todo make override and original route load if need. Otherwise override is override
+            if (is_file($overrideRoutePath)) {
+                $parentServiceProvider->loadRoutesFrom($overrideRoutePath);
+            }
+            else {
+                $parentServiceProvider->loadRoutesFrom($routeFiles);
+            }
 
-			foreach ($finder->getIterator() as $file) {
-				$cls     = $file->getBasename('.php');
-				$command = $packageConfig->concatNamespace('Console\\Commands\\'.$cls);
+            $parentServiceProvider
+                ->publishes(
+                    [$routeFiles => base_path('/routes/web-' . $packageConfig->groupOrVendorName() . '.php')],
+                    $packageConfig->concatGroupName('routes'),
+                )
+            ;
+        }
+    }
 
-				if (is_subclass_of($command, Command::class) && ! (new ReflectionClass($command))->isAbstract()) {
-					Artisan::starting(fn(Artisan $artisan) => $artisan->resolve($command));
-				}
-			}
-		}
-	}
+    /**
+     * Publish Migrations if need
+     *
+     * @see https://laravel.com/docs/11.x/packages#migrations
+     *
+     * @param PackageConfig $packageConfig
+     *
+     * @return void
+     */
+    protected function bootingMigrations(PackageConfig $packageConfig): void
+    {
+        $migrationDir = $packageConfig->concatPath('database/migrations');
+        if (is_dir($migrationDir)) {
+            $this->parentServiceProvider()
+                 ->publishesMigrations(
+                     [$migrationDir => database_path('migrations')],
+                     $packageConfig->concatGroupName('migrations'),
+                 )
+            ;
+        }
+    }
 
-	/**
-	 * publish the config
-	 *
-	 * @see https://laravel.com/docs/11.x/packages#publishing-file-groups
-	 *
-	 * @param PackageConfig $packageConfig
-	 *
-	 * @return void
-	 */
-	protected function bootingConfig(PackageConfig $packageConfig): void
-	{
-		$configFile = $packageConfig->concatPath('config/config.php');
-		if (is_file($configFile)) {
-			$this->parentServiceProvider()
-				 ->publishes(
-				 	[$configFile => config_path($packageConfig->groupOrVendorName().'.php')],
-				 	$packageConfig->concatGroupName('config'),
-				 )
-			;
-		}
-	}
+    /**
+     * Loading translations from package/lang
+     *
+     * @see https://laravel.com/docs/11.x/packages#language-files
+     *
+     * @param PackageConfig $packageConfig
+     *
+     * @return void
+     */
+    protected function bootingTranslations(PackageConfig $packageConfig): void
+    {
+        $langDir = $packageConfig->concatPath('lang');
+        if (is_dir($langDir)) {
+            $serviceProvider = $this->parentServiceProvider();
+            $serviceProvider->loadTranslationsFrom($langDir, $packageConfig->getVendorPackageName());
+            $serviceProvider->publishes(
+                [$langDir => $serviceProvider->app->langPath('vendor/' . $packageConfig->getVendorPackageName())],
+                $packageConfig->concatGroupName('translations'),
+            );
+        }
+    }
+
+    /**
+     * Enable blade views in laravel or publish
+     *
+     * @param PackageConfig $packageConfig
+     *
+     * @return void
+     */
+    protected function bootingViews(PackageConfig $packageConfig): void
+    {
+        $viewsDir = $packageConfig->concatPath('resources/views');
+        if (is_dir($viewsDir)) {
+            $serviceProvider = $this->parentServiceProvider();
+            $serviceProvider->loadViewsFrom($viewsDir, $packageConfig->getNamespace());
+            $serviceProvider->publishes(
+                [$viewsDir => resource_path('views/vendor/' . $packageConfig->getVendorPackageName())],
+                $packageConfig->concatGroupName('views'),
+            );
+
+            $serviceProvider->callAfterResolving(
+                'view',
+                function(ViewFactory $view_factory) use ($packageConfig) {
+                    $view_factory->addNamespace(
+                        $packageConfig->getVendorPackageName(),
+                        $packageConfig->concatPath('resources/views'),
+                    );
+                },
+            );
+        }
+    }
+
+    /**
+     * Boot commands if there is any
+     *
+     * @see https://laravel.com/docs/11.x/packages#commands
+     *
+     * @throws ReflectionException
+     */
+    protected function bootingCommands(PackageConfig $packageConfig): void
+    {
+        $commandDir = $packageConfig->concatPath('src/Console/Commands');
+        if (app()->runningInConsole() && is_dir($commandDir)) {
+            $finder = Finder::create()
+                            ->files()
+                            ->in($commandDir)
+                            ->name('*.php')
+            ;
+
+            foreach ($finder->getIterator() as $file) {
+                $cls     = $file->getBasename('.php');
+                $command = $packageConfig->concatNamespace('Console\\Commands\\' . $cls);
+
+                if (is_subclass_of($command, Command::class) && !(new ReflectionClass($command))->isAbstract()) {
+                    Artisan::starting(fn(Artisan $artisan) => $artisan->resolve($command));
+                }
+            }
+        }
+    }
+
+    /**
+     * publish the config
+     *
+     * @see https://laravel.com/docs/11.x/packages#publishing-file-groups
+     *
+     * @param PackageConfig $packageConfig
+     *
+     * @return void
+     */
+    protected function bootingConfig(PackageConfig $packageConfig): void
+    {
+        $configFile = $this->helperConfigFiles($packageConfig);
+        if ($configFile) {
+            $this->parentServiceProvider()
+                 ->publishes(
+                     [$configFile => config_path($packageConfig->groupOrVendorName() . '.php')],
+                     $packageConfig->concatGroupName('config'),
+                 )
+            ;
+        }
+    }
+
+    /**
+     * Called via registering
+     *
+     * @param PackageConfig $packageConfig
+     *
+     * @return void
+     */
+    protected function registeringConfig(PackageConfig $packageConfig): void
+    {
+        $configFile = $this->helperConfigFiles($packageConfig);
+        if ($configFile) {
+            $this->parentServiceProvider()
+                 ->mergeConfigFrom($configFile, $packageConfig->groupOrVendorName())
+            ;
+        }
+    }
+
+    /**
+     * Locate the config DRY
+     * @param PackageConfig $packageConfig
+     *
+     * @return string|null
+     * @internal
+     */
+    protected function helperConfigFiles(PackageConfig $packageConfig): ?string
+    {
+        $configFile = $packageConfig->concatPath('config/config.php');
+
+        return is_file($configFile) ? $configFile : null;
+    }
 }

@@ -57,9 +57,9 @@ class YourPackageServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-       $packageConfig = new PackageConfig(basePath         : realpath(__DIR__ . '/../../') . '/',
+       $packageConfig = new PackageConfig(basePath         : __DIR__ . '/../../',
                                           vendorPackageName: 'your-package',
-                                          namespace        : 'YourCompanyVendor\\YourPackage\\');
+                                          namespace        : 'YourCompanyVendor\\YourPackage');
        
        // parts to boot if they are already exists in your code 
        $bootParts = [
@@ -74,7 +74,7 @@ class YourPackageServiceProvider extends ServiceProvider
 		];
  
         /* Easy boot utility. You can replace all the booted service/parts with your own*/
-       $this->bootraiserService($packageConfig,$bootParts);
+       $this->bootBootraiserServices($packageConfig,$bootParts);
     }
 
 }
@@ -99,9 +99,9 @@ Subdivide the boot process with boot raiser if needed.
 ...
 public function boot(): void
     {
-       $packageConfig = new PackageConfig(basePath         : realpath(__DIR__ . '/../../') . '/',
+       $packageConfig = new PackageConfig(basePath         : __DIR__ . '/../../',
                                           vendorPackageName: 'your-package',
-                                          namespace        : 'YourCompanyVendor\\YourPackage\\');
+                                          namespace        : 'YourCompanyVendor\\YourPackage');
        
        // parts to boot if they are already exists in your code 
        $bootParts = [
@@ -111,7 +111,7 @@ public function boot(): void
 		];
  
         /* Easy boot utility. You can replace all the booted service/parts with your own*/
-       $this->bootraiserService($packageConfig,$bootParts);
+       $this->bootBootraiserServices($packageConfig,$bootParts);
        
        /**
         * your custom boot stuff
@@ -125,7 +125,7 @@ public function boot(): void
             // 3rd Party package
             'Livewire',
             ];
-       $this->bootraiserService($packageConfig,$bootParts2);
+       $this->bootBootraiserServices($packageConfig,$bootParts2);
     }
 ...
 ?>
@@ -133,13 +133,13 @@ public function boot(): void
 
 The following boot mechanisms are available to you:
 
-### Routes
+### boot `Routes`
 
 `packages/your-package/routes/web.php`
 
 @see https://laravel.com/docs/11.x/packages#routes
 
-### Migrations
+### boot `Migrations`
 
 `packages/your-package/database/migrations/*`
 
@@ -149,7 +149,7 @@ php artisan vendor:publish --tag=your-package-migrations
 
 @see https://laravel.com/docs/11.x/packages#migrations
 
-### Translations (Language-Files)
+### boot `Translations` (Language-Files)
 
 `packages/your-package/lang/*`
 
@@ -159,7 +159,7 @@ php artisan vendor:publish --tag=your-package-translations
 
 https://laravel.com/docs/11.x/packages#language-files
 
-### Views (blade) and View Components
+### boot `Views` (blade) and View Components
 
 * loadViews
 * publish your blade files for overrides if need
@@ -171,16 +171,16 @@ php artisan vendor:publish --tag=your-package-views
  
 @see https://laravel.com/docs/11.x/packages#views
 
-### Commands
+### boot `Commands`
 
-Boot your commands if any are existing.
+Boot your commands if any are existing, and if you handle laravel at the moment with cli
 
 `packages/your-package/src/Console/Commands`
 
 @see https://laravel.com/docs/11.x/packages#commands
 
 
-### Config
+### boot `Config`
 
 `packages/your-package/config/config.php`
 
@@ -191,7 +191,11 @@ php artisan vendor:publish --tag=your-package-config
 
 will output to `config/your-package.php` or with custom `$packageConfig->setGroupName('cooler')` to `config/cooler.php`
 
-### Livewire
+### register `Config`
+
+please see under [Advanced usage](#advanced-usage) for a little bit more functionality
+
+### boot `Livewire`
 
 If you create your own Livewire views, Livewire is also supported and booted.
 * blade directory: `packages/your-package/resource/views/livewire/*`
@@ -203,9 +207,9 @@ If your package name is too long or cumbersome to create a memorable group name,
 ```php
 <?php 
 ...
-$packageConfig = new PackageConfig(basePath         : realpath(__DIR__ . '/../../') . '/',
+$packageConfig = new PackageConfig(basePath         : __DIR__ . '/../../',
                                    vendorPackageName: 'your-package',
-                                   namespace        : 'YourCompanyVendor\\YourPackage\\');
+                                   namespace        : 'YourCompanyVendor\\YourPackage');
 $packageConfig->setGroupName('cooler');
 ?>
 ```
@@ -213,9 +217,9 @@ Or inline:
 ```php
 <?php 
 ...
-$packageConfig = (new PackageConfig(basePath         : realpath(__DIR__ . '/../../') . '/',
+$packageConfig = (new PackageConfig(basePath         :  __DIR__ . '/../../',
                                     vendorPackageName: 'your-package',
-                                    namespace        : 'YourCompanyVendor\\YourPackage\\'))
+                                    namespace        : 'YourCompanyVendor\\YourPackage'))
                                    ->setGroupName('cooler');
 ?>
 ```
@@ -224,3 +228,69 @@ Now all your publish tag options will look like `--tag=cooler-views`
 ```shell
 php artisan vendor:publish --tag=cooler-views
 ```
+
+
+## Advanced usage
+
+
+
+If you want to make your config publishable,
+you would also have to adapt the YourServiceProvider::register() as follows
+
+While using in YourServiceProvider the register(), and boot() methods use a better the following Schema:
+```php
+<?php
+
+namespace YourCompanyVendor\YourPackage\Providers;
+
+use Filefabrik\Bootraiser\Bootraiser;
+use Filefabrik\Bootraiser\Support\PackageConfig;use Illuminate\Support\ServiceProvider;
+
+class YourPackageServiceProvider extends ServiceProvider
+{
+    // insert this Magic Trait :)
+    use Bootraiser;
+    
+    // 
+    protected array $bootraiserConfig = [__DIR__ . '/../../',
+                                         'your-package',
+                                         'YourCompanyVendor\\YourPackage'];
+    public function register()
+    {
+        $this->registerBootraiserServices($this->getBootraiserPackageConfig(), ['Config']);
+    }
+
+    public function boot(): void
+    {
+       // parts to boot if they are already exists in your code 
+        // parts to boot if they are already exists in your code 
+       $bootParts = [
+       	    'Routes',
+			'Migrations',
+			'Translations',
+		];
+ 
+        /* Easy boot utility. You can replace all the booted service/parts with your own*/
+       $this->bootBootraiserServices($this->getBootraiserPackageConfig(),$bootParts);
+       
+       /**
+        * your custom boot stuff
+        */
+       
+       // boot the rest if need 
+       $bootParts2 = [
+            'Views',
+            'Commands',
+            'Config',
+            // 3rd Party package
+            'Livewire',
+            ];
+       $this->bootBootraiserServices($this->getBootraiserPackageConfig(),$bootParts2);
+    }
+
+}
+```
+
+
+
+https://laravel.com/docs/11.x/packages#default-package-configuration
