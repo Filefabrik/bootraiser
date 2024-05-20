@@ -14,8 +14,18 @@ It is also quite cool if the Laravel “publish” methods are supported so that
 Installation:
 
 ```shell
-composer install filefabrik/bootraiser
+composer require filefabrik/bootraiser
 ```
+
+If you only want to use Bootraiser during development, integrate the bootraiser package with:
+```shell
+composer require filefabrik/bootraiser --dev
+```
+
+Then please remember to implement your own boot mechanisms
+or copy the boot mechanisms you need from the Bootraiser-Trait into your `YourPackageServiceProvider`
+
+## Modify your YourPackageServiceProvider.php
 
 Then go to your provider file, which is usually under:
 
@@ -65,19 +75,19 @@ class YourPackageServiceProvider extends ServiceProvider
 }
 ```
 
-To use Bootraiser, `use Bootraiser;` must be included.
+1. To use Bootraiser, `use Bootraiser;` must be included.
 
-Next comes the configuration of your package.
+2. Next comes the configuration of your package.
 Note:
 The path must be above your ./src folder so that the lang|config|migration/database folder of Bootraiser can be found correctly.
 
-Then which components you want to boot with Bootraiser as an Array.
+3. Then which components you want to boot with Bootraiser as an Array.
 Note:
 You can enter all parts as boot parts. Bootraiser only boots the parts that are actually in your package.
 
 ## Split Bootraiser Boot process
 
-Subdivide the boot process with boot raiser if required.
+Subdivide the boot process with boot raiser if needed.
 
 ```php
 <?php 
