@@ -9,6 +9,8 @@ This can sometimes cost an unnecessary amount of time.
 Filefabrik-Bootraiser provides you with all important Laravel boot methods immediately and without much configuration effort.
 It is also quite cool if the Laravel “publish” methods are supported so that views|translations|config overrides can be published later.
 
+* github-project: https://github.com/Filefabrik/bootraiser
+
 **current state is "dev". there are no tests. but they are under construction**
 
 Installation:
