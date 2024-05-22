@@ -176,6 +176,7 @@ trait Bootraiser
         if (is_dir($migrationDir)) {
             $this->parentServiceProvider()
                  ->publishesMigrations(
+                     // todo perhaps each file with a package prefix
                      [$migrationDir => database_path('migrations')],
                      $packageConfig->concatGroupName('migrations'),
                  )
