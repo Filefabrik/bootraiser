@@ -17,7 +17,6 @@ It is also quite cool if the Laravel “publish” methods are supported so that
 Installation:
 
 
-
 ```shell
 composer require filefabrik/bootraiser
 ```
@@ -291,6 +290,21 @@ class YourPackageServiceProvider extends ServiceProvider
 }
 ```
 
-
-
 https://laravel.com/docs/11.x/packages#default-package-configuration
+
+
+## Todos 
+
+* for each vendor/package using bootraiser gives the ability to show all publish-tags within the package used/enabled. So developers' Documentation of the package can be written easier. Something like this:
+```shell
+php artisan bootraiser:show {packagename}
+```
+* Locate and Discover the package paths and locations more automatic to prevent something like that:
+```shell
+protected array $bootraiserConfig = [__DIR__ . '/../../',
+                                         'cool-package',
+                                         'MyDemoVendor\\CoolPackage'];
+```
+* If there are many own custom packages, maybe it is good to allow caching the bootraiser booting-parts. So the discovering/booting/registering of own packages will be faster in live-environments. 
+* In conjunction with caching, enable or disable a package from caching. The reason is, you are developing in the specific package, other packages are not under development.  
+* for env.testing the migrations should be available to the testing database but not to be published.
