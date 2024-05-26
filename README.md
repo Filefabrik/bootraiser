@@ -42,13 +42,14 @@ YourPackageServiceProvider.php file looks like this:
 
 namespace YourCompanyVendor\YourPackage\Providers;
 
-use Filefabrik\Bootraiser\Bootraiser;
-use Filefabrik\Bootraiser\Support\PackageConfig;use Illuminate\Support\ServiceProvider;
+use Filefabrik\Bootraiser\WithBootraiser;
+use Filefabrik\Bootraiser\Support\PackageConfig;
+use Illuminate\Support\ServiceProvider;
 
 class YourPackageServiceProvider extends ServiceProvider
 {
     // insert this Magic Trait :)
-    use Bootraiser;
+    use WithBootraiser;
 
     public function register()
     {
@@ -56,10 +57,6 @@ class YourPackageServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-       $packageConfig = new PackageConfig(basePath         : __DIR__ . '/../../',
-                                          vendorPackageName: 'your-package',
-                                          namespace        : 'YourCompanyVendor\\YourPackage');
-       
        // parts to boot if they are already exists in your code 
        $bootParts = [
        	    'Routes',
@@ -73,19 +70,15 @@ class YourPackageServiceProvider extends ServiceProvider
 		];
  
         /* Easy boot utility. You can replace all the booted service/parts with your own*/
-       $this->bootBootraiserServices($packageConfig,$bootParts);
+       $this->bootraiserBoot($packageConfig,$bootParts);
     }
 
 }
 ```
 
-1. To use Bootraiser, `use Bootraiser;` must be included.
+1. To use Bootraiser, `use WithBootraiser;` must be included.
 
-2. Next comes the configuration of your package.
-Note:
-The path must be above your ./src folder so that the lang|config|migration/database folder of Bootraiser can be found correctly.
-
-3. Then which components you want to boot with Bootraiser as an Array.
+2. Then which components you want to boot with Bootraiser as an Array.
 Note:
 You can enter all parts as boot parts. Bootraiser only boots the parts that are actually in your package.
 
@@ -98,9 +91,6 @@ Subdivide the boot process with boot raiser if needed.
 ...
 public function boot(): void
     {
-       $packageConfig = new PackageConfig(basePath         : __DIR__ . '/../../',
-                                          vendorPackageName: 'your-package',
-                                          namespace        : 'YourCompanyVendor\\YourPackage');
        
        // parts to boot if they are already exists in your code 
        $bootParts = [
@@ -110,7 +100,7 @@ public function boot(): void
 		];
  
         /* Easy boot utility. You can replace all the booted service/parts with your own*/
-       $this->bootBootraiserServices($packageConfig,$bootParts);
+       $this->bootraiserBoot($bootParts);
        
        /**
         * your custom boot stuff
@@ -124,7 +114,7 @@ public function boot(): void
             // 3rd Party package
             'Livewire',
             ];
-       $this->bootBootraiserServices($packageConfig,$bootParts2);
+       $this->bootraiserBoot($bootParts2);
     }
 ...
 ?>
@@ -167,7 +157,7 @@ https://laravel.com/docs/11.x/packages#language-files
 php artisan vendor:publish --tag=your-package-views
 ```
 * register your package to view components
- 
+
 @see https://laravel.com/docs/11.x/packages#views
 
 ### boot `Commands`
@@ -206,20 +196,7 @@ If your package name is too long or cumbersome to create a memorable group name,
 ```php
 <?php 
 ...
-$packageConfig = new PackageConfig(basePath         : __DIR__ . '/../../',
-                                   vendorPackageName: 'your-package',
-                                   namespace        : 'YourCompanyVendor\\YourPackage');
-$packageConfig->setGroupName('cooler');
-?>
-```
-Or inline:
-```php
-<?php 
-...
-$packageConfig = (new PackageConfig(basePath         :  __DIR__ . '/../../',
-                                    vendorPackageName: 'your-package',
-                                    namespace        : 'YourCompanyVendor\\YourPackage'))
-                                   ->setGroupName('cooler');
+$this->bootraiserConfig()->setGroupName('cooler');
 ?>
 ```
 Now all your publish tag options will look like `--tag=cooler-views`
@@ -228,9 +205,70 @@ Now all your publish tag options will look like `--tag=cooler-views`
 php artisan vendor:publish --tag=cooler-views
 ```
 
+### command db:seed
+
+So that you can execute database seeders for packages, the db:seed command has been extended by the following options.
+
+#### `--all` database Seeders 
+
+```shell
+php artisan db:seed --all
+```
+
+With the --all flag all DatabaseSeeder are executed in DatabaseSeeder.php.
+
+For example, all executed DatabaseSeeders:
+
+The Laravel Application Seeder
+* ~./database/seeders/DatabaseSeeder.php
+
+And for packages they are using bootraiser:
+
+* ~./packages/my-package/database/seeders/DatabaseSeeder.php
+* ~./app-paxsy/another-package/database/seeders/DatabaseSeeder.php
+
+@see https://laravel.com/docs/11.x/seeding#running-seeders
+
+Of course, you can also execute the seeders from the respective package directly.
+
+##### for the "main" database seeder in a package:
+```shell
+php artisan db:seed "MyVendor\\MyPackage\\Database\\Seeders\\DatabaseSeeder"
+```
+
+#### for a sub-seeder in a package:
+
+~./packages/my-package/database/seeders/FlightsSeeder.php
+
+```shell
+php artisan db:seed "MyVendor\\MyPackage\\Database\\Seeders\\FlightsSeeder"
+```
+
+#### `--package` main seeder for a package
+
+If you want to execute the main seeder of a package, use the --package flag
+
+```shell
+php artisan db:seed --package=MyPackage
+```
+or with the composer package-name
+```shell
+php artisan db:seed --package=my-package
+```
+or with the composer vendor-package-name
+```shell
+php artisan db:seed --package=my-vendor/my-package
+```
+
+#### `--package=package --class=MyFlight` Execute individual seeders in a package
+
+The package can be used as in the section [--package main seeder for a package](#--package-main-seeder-for-a-package) can be noted
+
+```shell
+php artisan db:seed --package=my-vendor/my-package --class=FlightSeeder
+```
 
 ## Advanced usage
-
 
 
 If you want to make your config publishable,
@@ -242,21 +280,19 @@ While using in YourServiceProvider the register(), and boot() methods use a bett
 
 namespace YourCompanyVendor\YourPackage\Providers;
 
-use Filefabrik\Bootraiser\Bootraiser;
-use Filefabrik\Bootraiser\Support\PackageConfig;use Illuminate\Support\ServiceProvider;
+use Filefabrik\Bootraiser\WithBootraiser;
+use Filefabrik\Bootraiser\Support\PackageConfig;
+use Illuminate\Support\ServiceProvider;
 
 class YourPackageServiceProvider extends ServiceProvider
 {
     // insert this Magic Trait :)
-    use Bootraiser;
+    use WithBootraiser;    
     
     // 
-    protected array $bootraiserConfig = [__DIR__ . '/../../',
-                                         'your-package',
-                                         'YourCompanyVendor\\YourPackage'];
     public function register()
     {
-        $this->registerBootraiserServices($this->getBootraiserPackageConfig(), ['Config']);
+        $this->bootraiserRegister(['Config']);
     }
 
     public function boot(): void
@@ -270,7 +306,7 @@ class YourPackageServiceProvider extends ServiceProvider
 		];
  
         /* Easy boot utility. You can replace all the booted service/parts with your own*/
-       $this->bootBootraiserServices($this->getBootraiserPackageConfig(),$bootParts);
+       $this->bootraiserBoot($bootParts);
        
        /**
         * your custom boot stuff
@@ -284,7 +320,7 @@ class YourPackageServiceProvider extends ServiceProvider
             // 3rd Party package
             'Livewire',
             ];
-       $this->bootBootraiserServices($this->getBootraiserPackageConfig(),$bootParts2);
+       $this->bootraiserBoot($bootParts2);
     }
 
 }
@@ -299,12 +335,16 @@ https://laravel.com/docs/11.x/packages#default-package-configuration
 ```shell
 php artisan bootraiser:show {packagename}
 ```
-* Locate and Discover the package paths and locations more automatic to prevent something like that:
-```shell
-protected array $bootraiserConfig = [__DIR__ . '/../../',
-                                         'cool-package',
-                                         'MyDemoVendor\\CoolPackage'];
-```
+
 * If there are many own custom packages, maybe it is good to allow caching the bootraiser booting-parts. So the discovering/booting/registering of own packages will be faster in live-environments. 
 * In conjunction with caching, enable or disable a package from caching. The reason is, you are developing in the specific package, other packages are not under development.  
 * for env.testing the migrations should be available to the testing database but not to be published.
+
+
+todo reflection command to show which laravel-components are inside such as seeder or livewire or or or.
+todo default database seeder in a package is the class `DatabaseSeeder` from there the method db:seed has to be run
+todo with explizit class name, the explizit class will be run
+todo with flag --package or and with a class in the package directory 
+todo describe db seeder (with "")
+`php artisan db:seed "\DemoPackage\TryCommandOptions\Database\Seeders\MySeeder"`
+`php artisan db:seed --class="\DemoPackage\TryCommandOptions\Database\Seeders\MySeeder"`

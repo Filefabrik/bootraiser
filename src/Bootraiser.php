@@ -6,7 +6,7 @@
 
 namespace Filefabrik\Bootraiser;
 
-use Exception;
+use Filefabrik\Bootraiser\Concerns\BootingSeeder;
 use Filefabrik\Bootraiser\Support\FindBootable;
 use Filefabrik\Bootraiser\Support\PackageConfig;
 use Illuminate\Console\Application as Artisan;
@@ -23,13 +23,6 @@ use Symfony\Component\Finder\Finder;
  */
 trait Bootraiser
 {
-    /**
-     * @throws Exception
-     */
-    protected function getBootraiserPackageConfig(?array $config = null): PackageConfig
-    {
-        return BootraiserManager::getPackageConfig(static::class, $config ?? $this->bootraiserConfig);
-    }
 
     /**
      * @return ServiceProvider $this
@@ -176,13 +169,38 @@ trait Bootraiser
         if (is_dir($migrationDir)) {
             $this->parentServiceProvider()
                  ->publishesMigrations(
-                     // todo perhaps each file with a package prefix
+                 // todo perhaps each file with a package prefix
                      [$migrationDir => database_path('migrations')],
                      $packageConfig->concatGroupName('migrations'),
                  )
             ;
         }
     }
+
+    /**
+     * Seeder is need to fill tables with default values set
+     * todo allow prefixes per package php artisan db:seed class=MySeeder | php artisan db:seed class=MyPrefixMySeeder
+     * is tracking assets
+     *
+     * @param PackageConfig $packageConfig
+     *
+     * @return void
+     */
+    protected function bootingSeeder(PackageConfig $packageConfig): void
+    {
+        (new BootingSeeder())->intoSeedable($packageConfig);
+    }
+
+    /* protected function bootingFactories(PackageConfig $packageConfig)
+     {
+         $migrationDir = $packageConfig->concatPath('database/factories');
+         if (is_dir($migrationDir)) {
+             $this->parentServiceProvider()
+                  ->callAfterResolving(\Illuminate\Database\Eloquent\Factory::class,
+                      fn($factory) => $factory->load($migrationDir))
+             ;
+         }
+     }*/
 
     /**
      * Loading translations from package/lang
@@ -305,6 +323,7 @@ trait Bootraiser
 
     /**
      * Locate the config DRY
+     *
      * @param PackageConfig $packageConfig
      *
      * @return string|null

@@ -6,13 +6,17 @@
 
 namespace Filefabrik\Bootraiser\Support;
 
+use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use UnexpectedValueException;
 
 /**
  * Each Vendor Package has his own basic config
  */
 class PackageConfig
 {
+    use PackageConfigDataTrait;
+
     /**
      * @var string|null
      */
@@ -47,15 +51,57 @@ class PackageConfig
     }
 
     /**
-     * PackageConfig from an array
+     * @param $config
      *
-     * @param ...$config
-     *
-     * @return self
+     * @return PackageConfig
      */
-    public static function fromArray(...$config): self
+    public static function from($config): PackageConfig
     {
-        return new self(...$config);
+        if ($config instanceof PackageConfig) {
+            return $config;
+        }
+        if ($config instanceof ServiceProvider) {
+            return self::fromServiceProvider($config);
+        }
+
+        throw new UnexpectedValueException('Bootraiser not properly configured');
+    }
+
+    /**
+     * @param ServiceProvider $serviceProvider
+     *
+     * @return PackageConfig
+     */
+    public static function fromServiceProvider(ServiceProvider $serviceProvider)
+    {
+        $cls = new \ReflectionClass($serviceProvider);
+
+        $srcPackageStarts = dirname(pathinfo($cls->getFileName(), PATHINFO_DIRNAME));
+
+        if (str_ends_with($srcPackageStarts, '/src')) {
+            // regular package
+            $packageStart = Str::replaceEnd('/src', '', $srcPackageStarts);
+        }
+        elseif (str_ends_with($srcPackageStarts, '/app'))
+        {
+            // laravel main package
+            $packageStart = Str::replaceEnd('/app', '', $srcPackageStarts);
+        }
+        else{
+            throw new UnexpectedValueException('Package can not be auto-detected');
+        }
+
+        $relPackageDirectory = Str::replaceStart(base_path(), '', $packageStart);
+
+        $packageName = Str::afterLast($relPackageDirectory, '/');
+
+        $packageNamespace = Str::replace('\\Providers',
+                                         '',
+                                         $cls->getNamespaceName());
+
+        return new PackageConfig($packageStart,
+                                 $packageName,
+                                 $packageNamespace);
     }
 
     /**
