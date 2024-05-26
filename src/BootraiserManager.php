@@ -8,36 +8,86 @@
 namespace Filefabrik\Bootraiser;
 
 use Filefabrik\Bootraiser\Support\PackageConfig;
+use Illuminate\Support\ServiceProvider;
 
 class BootraiserManager
 {
     protected static ?self $instance = null;
+
     /**
      * @var array<string,PackageConfig>
      */
-    protected array $configs = [];
+    protected array $packageConfigs = [];
 
-    public static function getPackageConfig(string $name, PackageConfig|array $config = []): PackageConfig
+    public static function getPackageConfig(string                             $name,
+                                            null|PackageConfig|ServiceProvider $config = null): PackageConfig
     {
-        self::$instance ??= new self();
-
-        if (self::$instance->hasConfig($name)) {
-            return self::$instance->getConfig($name);
+        $instance = self::get();
+        if ($instance->hasConfig($name)) {
+            return $instance->getConfig($name);
         }
         if (!$config) {
             throw new \Exception('Configuration is empty. So can not create Bootraiser Package config');
         }
 
-        return self::$instance->configs[$name] = is_array($config) ? PackageConfig::fromArray(...$config) : $config;
+        return $instance->packageConfigs[$name] = PackageConfig::from($config);
+    }
+
+    public static function get()
+    {
+        return self::$instance ??= new self();
+    }
+    public static function getPackages(): array
+    {
+        return self::get()->getPackageConfigs();
+    }
+
+
+    public static function searchPackage(string $name): ?PackageConfig
+    {
+        // more searchable stuff via iterating each pa
+        $instance = self::get();
+        if ($instance) {
+            // search via index
+            $found = $instance->packageConfigs[$name] ?? null;
+            if ($found) {
+                return $found;
+            }
+            foreach ($instance->packageConfigs as $packageConfig) {
+                if (
+                    in_array($name,
+                             [$packageConfig->getGroupName(),
+                              $packageConfig->getVendorPackageName(),
+                              $packageConfig->groupOrVendorName()])
+                ) {
+                    return $packageConfig;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<string,PackageConfig>|null
+     */
+    public static function packages(): ?array
+    {
+        return self::$instance?->packageConfigs;
     }
 
     protected function hasConfig(string $name): bool
     {
-        return !!($this->configs[$name]??null);
+        return !!($this->packageConfigs[$name] ?? null);
     }
 
     public function getConfig(string $name): PackageConfig
     {
-        return $this->configs[$name];
+        return $this->packageConfigs[$name];
+    }
+
+    public function getPackageConfigs(): array
+    {
+        return $this->packageConfigs;
     }
 }
