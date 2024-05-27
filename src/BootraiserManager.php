@@ -37,6 +37,10 @@ class BootraiserManager
     {
         return self::$instance ??= new self();
     }
+
+    /**
+     * @return array<string,PackageConfig>
+     */
     public static function getPackages(): array
     {
         return self::get()->getPackageConfigs();
