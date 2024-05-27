@@ -9,31 +9,38 @@ namespace Filefabrik\Bootraiser\Support;
 
 use Illuminate\Database\Eloquent\Collection;
 
+/**
+ *
+ */
 trait PackageConfigDataTrait
 {
     /**
      * @var array<string,Collection>
      */
-    private array $dataPools = [];
+    private array $configs = [];
 
-    public function addPool(string $poolName, $datas = new Collection())
+    /**
+     * @param string $poolName
+     * @param        $item
+     *
+     * @return $this
+     */
+    public function add(string $poolName, $item): static
     {
-        $this->dataPools[$poolName] ??= new Collection();
-        $this->dataPools[$poolName]->merge($datas);
+        $this->getConfig($poolName)
+             ->add($item)
+        ;
 
         return $this;
     }
 
-    public function ontoPool(string $poolName, $item)
+    /**
+     * @param string $poolName
+     *
+     * @return Collection
+     */
+    public function getConfig(string $poolName): Collection
     {
-        $this->dataPools[$poolName] ??= new Collection();
-        $this->dataPools[$poolName]->add($item);
-
-        return $this;
-    }
-
-    public function getPool(string $poolName)
-    {
-        return $this->dataPools[$poolName] ?? new Collection();
+        return $this->configs[$poolName] ??= new Collection();
     }
 }

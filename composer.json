@@ -9,6 +9,11 @@
             "Filefabrik\\Bootraiser\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Filefabrik\\Bootraiser\\Tests\\": "/tests"
+        }
+    },
     "authors": [
         {
             "name": "filefabrik"

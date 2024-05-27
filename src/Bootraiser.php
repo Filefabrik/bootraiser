@@ -6,7 +6,6 @@
 
 namespace Filefabrik\Bootraiser;
 
-use Filefabrik\Bootraiser\Concerns\BootingSeeder;
 use Filefabrik\Bootraiser\Support\FindBootable;
 use Filefabrik\Bootraiser\Support\PackageConfig;
 use Illuminate\Console\Application as Artisan;
@@ -178,9 +177,8 @@ trait Bootraiser
     }
 
     /**
-     * Seeder is need to fill tables with default values set
-     * todo allow prefixes per package php artisan db:seed class=MySeeder | php artisan db:seed class=MyPrefixMySeeder
-     * is tracking assets
+     * Seeder is need to fill tables with default values set.
+     * Set only a flag, the package should be handelt by bootraiser db:seed
      *
      * @param PackageConfig $packageConfig
      *
@@ -188,7 +186,7 @@ trait Bootraiser
      */
     protected function bootingSeeder(PackageConfig $packageConfig): void
     {
-        (new BootingSeeder())->intoSeedable($packageConfig);
+        $packageConfig->add('trackSeeders', true);
     }
 
     /* protected function bootingFactories(PackageConfig $packageConfig)

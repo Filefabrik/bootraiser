@@ -72,22 +72,22 @@ class PackageConfig
      *
      * @return PackageConfig
      */
-    public static function fromServiceProvider(ServiceProvider $serviceProvider)
+    public static function fromServiceProvider(ServiceProvider $serviceProvider): PackageConfig
     {
-        $cls = new \ReflectionClass($serviceProvider);
-
+        $cls              = new \ReflectionClass($serviceProvider);
+        $isLaravel        = false;
         $srcPackageStarts = dirname(pathinfo($cls->getFileName(), PATHINFO_DIRNAME));
 
         if (str_ends_with($srcPackageStarts, '/src')) {
             // regular package
             $packageStart = Str::replaceEnd('/src', '', $srcPackageStarts);
         }
-        elseif (str_ends_with($srcPackageStarts, '/app'))
-        {
+        elseif (str_ends_with($srcPackageStarts, '/app')) {
             // laravel main package
             $packageStart = Str::replaceEnd('/app', '', $srcPackageStarts);
+            $isLaravel    = true;
         }
-        else{
+        else {
             throw new UnexpectedValueException('Package can not be auto-detected');
         }
 
@@ -99,9 +99,15 @@ class PackageConfig
                                          '',
                                          $cls->getNamespaceName());
 
-        return new PackageConfig($packageStart,
-                                 $packageName,
-                                 $packageNamespace);
+        $package = new PackageConfig($packageStart,
+                                     $packageName,
+                                     $packageNamespace);
+
+        if ($isLaravel) {
+            $package->setVendorPackageName('Laravel');
+        }
+
+        return $package;
     }
 
     /**
