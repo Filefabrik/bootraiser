@@ -9,7 +9,7 @@ namespace Filefabrik\Bootraiser\Concerns;
 
 use Symfony\Component\Finder\Finder;
 
-class SeederFiles
+class FindSeeders
 {
 
     public static function databaseSeeder(string $path): ?string

@@ -52,7 +52,7 @@ class PackageSeeder
      */
     public function databaseSeeder(): ?string
     {
-        return SeederFiles::databaseSeeder($this->getPath());
+        return FindSeeders::databaseSeeder($this->getPath());
     }
 
     /**
@@ -63,7 +63,7 @@ class PackageSeeder
         $path = $this->getPath();
         if ($path) {
             $seeders           = [];
-            $databaseSubSeeder = SeederFiles::databaseSubSeeders($path);
+            $databaseSubSeeder = FindSeeders::databaseSubSeeders($path);
             // Other Classes in package/database/seeder/ used for particular execution or from the DatabaseSeeder.php
             foreach ($databaseSubSeeder?->getIterator() ?? [] as $file) {
                 // todo check is seeder class

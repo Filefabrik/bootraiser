@@ -8,11 +8,11 @@ declare(strict_types=1);
 
 namespace Filefabrik\Bootraiser\Tests\Concerns;
 
-use Filefabrik\Bootraiser\Concerns\SuggestSeeder;
+use Filefabrik\Bootraiser\Concerns\SuggestSeeders;
 
 test('Suggest seeder',
     function() {
-        $sSeeder = new SuggestSeeder();
+        $sSeeder = new SuggestSeeders();
         $r       = $sSeeder->listPackagesSeeders();
 
         expect($r)->toBeArray();
