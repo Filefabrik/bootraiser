@@ -59,6 +59,7 @@ class YourPackageServiceProvider extends ServiceProvider
     {
        // parts to boot if they are already exists in your code 
        $bootParts = [
+            'Seeders',
        	    'Routes',
 			'Migrations',
 			'Translations',
@@ -79,8 +80,8 @@ class YourPackageServiceProvider extends ServiceProvider
 1. To use Bootraiser, `use WithBootraiser;` must be included.
 
 2. Then which components you want to boot with Bootraiser as an Array.
-Note:
-You can enter all parts as boot parts. Bootraiser only boots the parts that are actually in your package.
+
+  Note: You can enter all parts as boot parts. Bootraiser only boots the parts that are actually in your package.
 
 ## Split Bootraiser Boot process
 
@@ -94,9 +95,10 @@ public function boot(): void
        
        // parts to boot if they are already exists in your code 
        $bootParts = [
-       	    'Routes',
-			'Migrations',
-			'Translations',
+            'Seeders',
+       	    'Routes',   
+       	    'Migrations',   
+       	    'Translations',
 		];
  
         /* Easy boot utility. You can replace all the booted service/parts with your own*/
@@ -190,7 +192,9 @@ If you create your own Livewire views, Livewire is also supported and booted.
 * blade directory: `packages/your-package/resource/views/livewire/*`
 * Livewire Component Directory `packages/your-package/src/Livewire/`
 
-A note on vendor:publish --tag=“your-package”-views|translations|migrations
+
+
+### A note on vendor:publish --tag=“your-package”-views|translations|migrations
 If your package name is too long or cumbersome to create a memorable group name, simply set a different identifier for the group names
 
 ```php
@@ -205,14 +209,30 @@ Now all your publish tag options will look like `--tag=cooler-views`
 php artisan vendor:publish --tag=cooler-views
 ```
 
-### command db:seed
+### command bootraiser:seed
+
+The bootraiser:seed command gets a menu with Bootraiser:
+
+```shell
+php artisan bootraiser:seed
+```
+
+![2024-05-28_17-53_1](./assets/2024-05-28_17-53_1.webp)
+
+All DatabaseSeeder.php they are tracked by Bootraiser will be executed `--main`
+
+![2024-05-28_17-53](./assets/2024-05-28_17-53.webp)
+
+Choose a seeder that you would like to perform 
+
+![2024-05-28_17-54](./assets/2024-05-28_17-54.webp)
 
 So that you can execute database seeders for packages, the db:seed command has been extended by the following options.
 
-#### `--all` database Seeders 
+#### `--main` database Seeders 
 
 ```shell
-php artisan db:seed --all
+php artisan bootraiser:seed --main
 ```
 
 With the --all flag all DatabaseSeeder are executed in DatabaseSeeder.php.
@@ -229,44 +249,7 @@ And for packages they are using bootraiser:
 
 @see https://laravel.com/docs/11.x/seeding#running-seeders
 
-Of course, you can also execute the seeders from the respective package directly.
 
-##### for the "main" database seeder in a package:
-```shell
-php artisan db:seed "MyVendor\\MyPackage\\Database\\Seeders\\DatabaseSeeder"
-```
-
-#### for a sub-seeder in a package:
-
-~./packages/my-package/database/seeders/FlightsSeeder.php
-
-```shell
-php artisan db:seed "MyVendor\\MyPackage\\Database\\Seeders\\FlightsSeeder"
-```
-
-#### `--package` main seeder for a package
-
-If you want to execute the main seeder of a package, use the --package flag
-
-```shell
-php artisan db:seed --package=MyPackage
-```
-or with the composer package-name
-```shell
-php artisan db:seed --package=my-package
-```
-or with the composer vendor-package-name
-```shell
-php artisan db:seed --package=my-vendor/my-package
-```
-
-#### `--package=package --class=MyFlight` Execute individual seeders in a package
-
-The package can be used as in the section [--package main seeder for a package](#--package-main-seeder-for-a-package) can be noted
-
-```shell
-php artisan db:seed --package=my-vendor/my-package --class=FlightSeeder
-```
 
 ## Advanced usage
 
@@ -299,10 +282,11 @@ class YourPackageServiceProvider extends ServiceProvider
     {
        // parts to boot if they are already exists in your code 
         // parts to boot if they are already exists in your code 
-       $bootParts = [
-       	    'Routes',
-			'Migrations',
-			'Translations',
+       $bootParts = [   
+            'Seeders',
+       	    'Routes',   
+       	    'Migrations',   
+       	    'Translations',
 		];
  
         /* Easy boot utility. You can replace all the booted service/parts with your own*/
