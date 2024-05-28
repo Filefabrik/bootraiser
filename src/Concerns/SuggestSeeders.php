@@ -20,9 +20,9 @@ class SuggestSeeders
 
     public function mainMenu(): int|string|null
     {
-        $options = ['list_all_seeder'      => 'all seeders',
-                    'main'                  => 'seed all main DatabaseSeeder',
-                    'list_package_seeders' => 'List Package Seeders'];
+        $options = ['list_all_seeder' => 'Seeders List',
+                    'main'            => 'Seed all main DatabaseSeeder',
+        ];
 
         $packageCollection = new Collection($options);
 

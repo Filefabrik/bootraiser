@@ -35,3 +35,11 @@ it('seed main',
             // todo expects mre
         ;
     });
+it('seed with bootraiser',
+    function() {
+        $this->artisan('bootraiser:seed')
+             ->expectsQuestion('Bootraiser db:seed', 'main')
+//            ->expectsQuestion('all seeders', 'try-command-options-EmptySeeder')
+            // todo expects mre
+        ;
+    });

@@ -62,6 +62,7 @@
     "extra": {
         "laravel": {
             "providers": [
+                "Filefabrik\\Bootraiser\\Support\\BootraiserServiceProvider",
                 "Filefabrik\\Bootraiser\\Support\\BootraiserCommandsServiceProvider",
                 "Filefabrik\\Bootraiser\\Support\\BootraiserDatabaseFactoryServiceProvider"
             ]
