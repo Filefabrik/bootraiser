@@ -8,9 +8,10 @@
 namespace Filefabrik\Bootraiser\Console\Commands\Database;
 
 use Filefabrik\Bootraiser\BootraiserManager;
-use Filefabrik\Bootraiser\Concerns\SuggestSeeder;
+use Filefabrik\Bootraiser\Concerns\SuggestSeeders;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\InputOption;
@@ -31,11 +32,11 @@ class SeedCommand extends \Illuminate\Database\Console\Seeds\SeedCommand
 
         $callParent = false;
 
-        $suggestSeeder = new SuggestSeeder();
+        $suggestSeeder = new SuggestSeeders();
 
         $menu = $suggestSeeder->mainMenu();
 
-        if ($menu === 'list_all_seeder') {
+        if ('list_all_seeder' === $menu) {
             $opts           = $suggestSeeder->packagesSeedersOptions();
             $selectedSeeder = suggest(label  : 'all seeders',
                                       options: fn($value) => (new Collection($opts ?? []))
@@ -43,7 +44,7 @@ class SeedCommand extends \Illuminate\Database\Console\Seeds\SeedCommand
                     ->all(),
                                       scroll : 10);
 
-            $classToSeed    = $suggestSeeder->selectedSeeder($selectedSeeder);
+            $classToSeed = $suggestSeeder->selectedSeeder($selectedSeeder);
 
             if ($classToSeed) {
                 $this->input->setArgument('class', $classToSeed);
@@ -55,8 +56,13 @@ class SeedCommand extends \Illuminate\Database\Console\Seeds\SeedCommand
                 throw new UnexpectedValueException($selectedSeeder . ' seeder not found');
             }
         }
-
-        // input masks
+        if (!$menu) {
+            $callParent = true;
+        }
+        elseif ('main' === $menu) {
+            $this->input->setOption('main', true);
+            $callParent = true;
+        }
 
         return $callParent ? parent::handle() : self::FAILURE;
     }
@@ -64,7 +70,7 @@ class SeedCommand extends \Illuminate\Database\Console\Seeds\SeedCommand
     /**
      * @throws BindingResolutionException
      */
-    protected function getSeeder(): \Illuminate\Database\Seeder|null
+    protected function getSeeder(): Seeder|null
     {
         return $this->handleOverrideSeeders() ? null : parent::getSeeder();
     }
@@ -77,14 +83,18 @@ class SeedCommand extends \Illuminate\Database\Console\Seeds\SeedCommand
      */
     protected function handleOverrideSeeders(): bool
     {
-        $hasAllOption = $this->option('all');
+        $hasMainOption = $this->option('main');
 
-        if ($hasAllOption) {
+        if ($hasMainOption) {
             $packages = BootraiserManager::packages();
+
+            $suggest = new SuggestSeeders();
             if (count($packages)) {
                 foreach ($packages as $package) {
                     // 1 item with a bool flag, nothing else needed
-                    if (count($package->getConfig('DatabaseSeeder'))) {
+                    $packageSeeders = $suggest->getPackageSeeders($package);
+
+                    if ($packageSeeders->get('DatabaseSeeder')) {
                         $seederClass = $package->concatNamespace('Database\Seeders\DatabaseSeeder');
 
                         $this->seedClass($seederClass);
@@ -112,7 +122,7 @@ class SeedCommand extends \Illuminate\Database\Console\Seeds\SeedCommand
                 // searching the wanted seeder class in files
                 $foundClass = false;
                 foreach ($availableSubSeeders as $namespace) {
-                    if (Str::endsWith('\\' . $classOption, $namespace,)) {
+                    if (Str::endsWith('\\' . $classOption, $namespace)) {
                         $this->seedClass($namespace);
                         $foundClass = true;
                     }
@@ -165,7 +175,7 @@ class SeedCommand extends \Illuminate\Database\Console\Seeds\SeedCommand
      *
      * @return void
      */
-    protected function invoker($invocableSeeder)
+    protected function invoker($invocableSeeder): void
     {
         // call th DatabaseSeeder from a Package
         Model::unguarded(fn() => $invocableSeeder->__invoke());
@@ -191,8 +201,8 @@ class SeedCommand extends \Illuminate\Database\Console\Seeds\SeedCommand
         ;
         $this->getDefinition()
              ->addOption(new InputOption(
-                             '--all',
-                             'null',
+                             '--main',
+                             null,
                              InputOption::VALUE_OPTIONAL,
                              'Seeds the Laravel Base application seeder and all found "DatabaseSeeder" they are tracked with bootraiser in packages',
                          ),)

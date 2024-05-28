@@ -189,17 +189,6 @@ trait Bootraiser
         $packageConfig->add('trackSeeders', true);
     }
 
-    /* protected function bootingFactories(PackageConfig $packageConfig)
-     {
-         $migrationDir = $packageConfig->concatPath('database/factories');
-         if (is_dir($migrationDir)) {
-             $this->parentServiceProvider()
-                  ->callAfterResolving(\Illuminate\Database\Eloquent\Factory::class,
-                      fn($factory) => $factory->load($migrationDir))
-             ;
-         }
-     }*/
-
     /**
      * Loading translations from package/lang
      *

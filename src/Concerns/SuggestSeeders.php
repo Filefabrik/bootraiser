@@ -15,14 +15,13 @@ use Illuminate\Support\Str;
 use UnexpectedValueException;
 use function Laravel\Prompts\select;
 
-class SuggestSeeder
+class SuggestSeeders
 {
 
-    public function mainMenu(): int|string
+    public function mainMenu(): int|string|null
     {
         $options = ['list_all_seeder'      => 'all seeders',
-                    'default'              => 'seed default',
-                    'all'                  => 'seed all main DatabaseSeeder',
+                    'main'                  => 'seed all main DatabaseSeeder',
                     'list_package_seeders' => 'List Package Seeders'];
 
         $packageCollection = new Collection($options);
@@ -70,7 +69,7 @@ class SuggestSeeder
         return null;
     }
 
-    public function packagesSeedersOptions()
+    public function packagesSeedersOptions(): array
     {
         $options = [];
         foreach ($this->listPackagesSeeders() as $packageName => $listPackagesSeeder) {
@@ -107,7 +106,7 @@ class SuggestSeeder
         return $allSeeders;
     }
 
-    protected function getPackageSeeders(PackageConfig $package): ?Collection
+    public function getPackageSeeders(PackageConfig $package): ?Collection
     {
         return $package->getConfig('trackSeeders')
                        ->isNotEmpty() ? (new Collection((new PackageSeeder($package))->findSeeder())) : null;
