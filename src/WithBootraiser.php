@@ -9,6 +9,7 @@ namespace Filefabrik\Bootraiser;
 
 use Filefabrik\Bootraiser\Support\PackageConfig;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 /**
  * fill in each service provider
@@ -37,7 +38,8 @@ trait WithBootraiser
             return $this->packageConfig;
         }
 
-        return $this->packageConfig = BootraiserManager::getPackageConfig(static::class, $config ?? $this);
+       $packageName= Str::beforeLast(static::class,'\\Support\\');
+        return $this->packageConfig = BootraiserManager::getPackageConfig($packageName, $config ?? $this);
     }
 
 }

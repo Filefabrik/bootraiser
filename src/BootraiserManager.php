@@ -22,6 +22,9 @@ class BootraiserManager
     public static function getPackageConfig(string                             $name,
                                             null|PackageConfig|ServiceProvider $config = null): PackageConfig
     {
+        // todo make package config based upon the real namespace or/and for the real package
+        // todo otherwise multiple ServiceProviders create there own Namespace
+        //
         $instance = self::get();
         if ($instance->hasConfig($name)) {
             return $instance->getConfig($name);
