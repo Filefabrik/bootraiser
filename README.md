@@ -13,7 +13,7 @@ This can sometimes cost an unnecessary amount of time.
 
 Filefabrik-Bootraiser provides you with all important Laravel boot methods immediately and without much configuration
 effort.
-It is also quite cool if the Laravel “publish” methods are supported so that views|translations|config overrides can be
+It is also quite cool if the Laravel “publish” methods are supported so that views|translations|packageConfig overrides can be
 published later.
 
 * github-project: https://github.com/Filefabrik/bootraiser
@@ -78,7 +78,7 @@ class YourPackageServiceProvider extends ServiceProvider
 		];
  
         /* Easy boot utility. You can replace all the booted service/parts with your own*/
-       $this->bootraiserBoot($packageConfig,$bootParts);
+       $this->bootraiserBoot($bootraiserPackage,$bootParts);
     }
 
 }
@@ -201,15 +201,15 @@ Boot your commands if any are existing, and if you handle laravel at the moment 
 
 ### boot `Config`
 
-`packages/your-package/config/config.php`
+`packages/your-package/packageConfig/packageConfig.php`
 
 ```shell
-php artisan vendor:publish --tag=your-package-config
+php artisan vendor:publish --tag=your-package-packageConfig
 ```
 
-`config` is singular!
+`packageConfig` is singular!
 
-will output to `config/your-package.php` or with custom `$packageConfig->setGroupName('cooler')` to `config/cooler.php`
+will output to `packageConfig/your-package.php` or with custom `$bootraiserPackage->setGroupName('cooler')` to `packageConfig/cooler.php`
 
 ### register `Config`
 
@@ -230,7 +230,7 @@ the group names
 ```php
 <?php 
 ...
-$this->bootraiserConfig()->setGroupName('cooler');
+$this->bootraiserPackage()->setGroupName('cooler');
 ?>
 ```
 
@@ -283,7 +283,7 @@ And for packages they are using bootraiser:
 
 ## Advanced usage
 
-If you want to make your config publishable,
+If you want to make your packageConfig publishable,
 you would also have to adapt the YourServiceProvider::register() as follows
 
 While using in YourServiceProvider the register(), and boot() methods use a better the following Schema:
@@ -364,3 +364,8 @@ todo with flag --package or and with a class in the package directory
 todo describe db seeder (with "")
 `php artisan db:seed "\DemoPackage\TryCommandOptions\Database\Seeders\MySeeder"`
 `php artisan db:seed --class="\DemoPackage\TryCommandOptions\Database\Seeders\MySeeder"`
+
+
+* todo migrations
+* own migrations such as bootraiser:migrate
+* display packages migrations, allow refresh with paths from selecting. with display the console command. during package development, table migrations are often changed 

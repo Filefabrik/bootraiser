@@ -1,6 +1,6 @@
 {
     "name": "filefabrik/bootraiser",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "description": "laravel boot helper for your custom packages",
     "type": "library",
     "license": "MIT",
@@ -10,7 +10,9 @@
         }
     },
     "autoload-dev": {
-        "files": ["tests/testing_helper.php"],
+        "files": [
+            "tests/testing_helper.php"
+        ],
         "psr-4": {
             "Filefabrik\\Bootraiser\\Tests\\": "/tests"
         }

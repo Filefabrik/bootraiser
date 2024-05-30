@@ -22,6 +22,7 @@ use Symfony\Component\Finder\Finder;
  */
 trait Bootraiser
 {
+    protected ?PackageConfig $bootraiserPackage = null;
 
     /**
      * @return ServiceProvider $this
@@ -31,33 +32,46 @@ trait Bootraiser
         return $this;
     }
 
+    protected function bootraiserPackage($config = null): PackageConfig
+    {
+        if ($this->bootraiserPackage && !$config) {
+            return $this->bootraiserPackage;
+        }
+
+        $packageName = Str::beforeLast(static::class, '\\Support\\');
+
+        return $this->bootraiserPackage = BootraiserManager::getPackageConfig($packageName, $config ?? $this);
+    }
+
     /**
      * Methods called from the YourPackageServiceProvider::register()
      *
-     * @param PackageConfig $packageConfig
-     * @param array         $registeringParts
+     * @param array              $parts
+     *
+     * @param PackageConfig|null $packageConfig
      *
      * @return void
      */
-    protected function registerBootraiserServices(PackageConfig $packageConfig, array $registeringParts): void
+    protected function registerBootraiserServices(array $parts, ?PackageConfig $packageConfig = null): void
     {
-        foreach ($registeringParts as $bootingPart) {
-            $this->registerBootraiserService($packageConfig, $bootingPart);
+        foreach ($parts as $part) {
+            $this->registerBootraiserService($part, $packageConfig);
         }
     }
 
     /**
      * Methods called from the YourPackageServiceProvider::register()
      *
-     * @param PackageConfig $packageConfig
-     * @param array         $registeringParts
+     * @param array              $parts
+     *
+     * @param PackageConfig|null $packageConfig
      *
      * @return void
      */
-    protected function integrateBootraiserServices(PackageConfig $packageConfig, array $registeringParts): void
+    protected function integrateBootraiserServices(array $parts, ?PackageConfig $packageConfig = null): void
     {
-        foreach ($registeringParts as $bootingPart) {
-            $this->integrateBootraiserService($packageConfig, $bootingPart);
+        foreach ($parts as $part) {
+            $this->integrateBootraiserService($part, $packageConfig);
         }
     }
 
@@ -66,55 +80,59 @@ trait Bootraiser
      * You can customize the booting methods or write your own booting.
      * The paxsy booting methods do not have any dependency magic
      *
-     * @param PackageConfig $packageConfig
-     * @param array         $bootingParts
+     * @param array              $parts
+     *
+     * @param PackageConfig|null $packageConfig
      *
      * @return void
      */
-    protected function bootBootraiserServices(PackageConfig $packageConfig, array $bootingParts): void
+    protected function bootBootraiserServices(array $parts, ?PackageConfig $packageConfig = null): void
     {
-        foreach ($bootingParts as $bootingPart) {
-            $this->bootBootraiserService($packageConfig, $bootingPart);
+        foreach ($parts as $bootingPart) {
+            $this->bootBootraiserService($bootingPart, $packageConfig);
         }
     }
 
     /**
-     * @param PackageConfig $packageConfig
-     * @param string        $registeringPart
+     * @param string             $parts
+     *
+     * @param PackageConfig|null $packageConfig
      *
      * @return bool
      */
-    protected function registerBootraiserService(PackageConfig $packageConfig, string $registeringPart): bool
+    protected function registerBootraiserService(string $parts, ?PackageConfig $packageConfig = null): bool
     {
-        return $this->callPackageMethod($packageConfig, 'registering', $registeringPart);
+        return $this->callPackageMethod('registering', $parts, $packageConfig);
     }
 
     /**
-     * @param PackageConfig $packageConfig
-     * @param string        $registeringPart
+     * @param string             $part
+     *
+     * @param PackageConfig|null $packageConfig
      *
      * @return bool
      */
-    protected function integrateBootraiserService(PackageConfig $packageConfig, string $registeringPart): bool
+    protected function integrateBootraiserService(string $part, ?PackageConfig $packageConfig = null): bool
     {
-        return $this->callPackageMethod($packageConfig, 'integrate', $registeringPart);
+        return $this->callPackageMethod('integrate', $part, $packageConfig);
     }
 
     /**
-     * @param PackageConfig $packageConfig
-     * @param string        $bootingPart
+     * @param string             $part
+     *
+     * @param PackageConfig|null $packageConfig
      *
      * @return bool
      */
-    protected function bootBootraiserService(PackageConfig $packageConfig, string $bootingPart): bool
+    protected function bootBootraiserService(string $part, ?PackageConfig $packageConfig = null): bool
     {
-        if ($this->callPackageMethod($packageConfig, 'booting', $bootingPart)) {
+        if ($this->callPackageMethod('booting', $part, $packageConfig)) {
             return true;
         }
         // by class
-        $instance = FindBootable::findBootable($bootingPart);
+        $instance = FindBootable::findBootable($part);
         if ($instance) {
-            $instance->booting($packageConfig);
+            $instance->booting($packageConfig ?? $this->bootraiserPackage());
 
             return true;
         }
@@ -123,13 +141,14 @@ trait Bootraiser
     }
 
     /**
-     * @param PackageConfig $packageConfig
-     * @param string        $prefix
-     * @param string        $methodPart
+     * @param string             $prefix
+     * @param string             $methodPart
+     *
+     * @param PackageConfig|null $packageConfig
      *
      * @return bool
      */
-    protected function callPackageMethod(PackageConfig $packageConfig, string $prefix, string $methodPart): bool
+    protected function callPackageMethod(string $prefix, string $methodPart, ?PackageConfig $packageConfig = null): bool
     {
         $serviceProvider = $this->parentServiceProvider();
         $method          = $prefix . Str::ucfirst($methodPart);
@@ -151,13 +170,14 @@ trait Bootraiser
      *
      * @see https://laravel.com/docs/11.x/packages#routes
      *
-     * @param PackageConfig $packageConfig
+     * @param PackageConfig|null $packageConfig
      *
      * @return void
      */
-    protected function bootingRoutes(PackageConfig $packageConfig): void
+    protected function bootingRoutes(?PackageConfig $packageConfig = null): void
     {
-        $routeFiles = $packageConfig->concatPath('routes/web.php');
+        $packageConfig ??= $this->bootraiserPackage();
+        $routeFiles    = $packageConfig->concatPath('routes/web.php');
         if (file_exists($routeFiles)) {
             $parentServiceProvider = $this->parentServiceProvider();
             $overrideRoutePath     = base_path('/routes/web-' . $packageConfig->groupOrVendorName() . '.php');
@@ -184,13 +204,14 @@ trait Bootraiser
      *
      * @see https://laravel.com/docs/11.x/packages#migrations
      *
-     * @param PackageConfig $packageConfig
+     * @param PackageConfig|null $packageConfig
      *
      * @return void
      */
-    protected function bootingMigrations(PackageConfig $packageConfig): void
+    protected function bootingMigrations(?PackageConfig $packageConfig = null): void
     {
-        $migrationDir = $packageConfig->concatPath('database/migrations');
+        $packageConfig ??= $this->bootraiserPackage();
+        $migrationDir  = $packageConfig->concatPath('database/migrations');
         if (is_dir($migrationDir)) {
             $this->parentServiceProvider()
                  ->publishesMigrations(
@@ -205,13 +226,13 @@ trait Bootraiser
     /**
      * If integrated on `php artisan migrate:status` these migrations will be offered and executed
      *
-     * @param PackageConfig $packageConfig
+     * @param PackageConfig|null $packageConfig
      *
      * @return void
      */
-    protected function integrateMigrations(PackageConfig $packageConfig): void
+    protected function integrateMigrations(?PackageConfig $packageConfig = null): void
     {
-        $migrationDir = $packageConfig->concatPath('database/migrations');
+        $migrationDir = ($packageConfig ?? $this->bootraiserPackage())->concatPath('database/migrations');
         if (is_dir($migrationDir)) {
             // not need to publish migrations.
             // migrations are available directly from package
@@ -223,13 +244,13 @@ trait Bootraiser
      * Seeder is need to fill tables with default values set.
      * Set only a flag, the package should be handelt by bootraiser db:seed
      *
-     * @param PackageConfig $packageConfig
+     * @param PackageConfig|null $packageConfig
      *
      * @return void
      */
-    protected function bootingSeeder(PackageConfig $packageConfig): void
+    protected function bootingSeeder(?PackageConfig $packageConfig = null): void
     {
-        $packageConfig->add('trackSeeders', true);
+        ($packageConfig ?? $this->bootraiserPackage())->add('trackSeeders', true);
     }
 
     /**
@@ -237,13 +258,14 @@ trait Bootraiser
      *
      * @see https://laravel.com/docs/11.x/packages#language-files
      *
-     * @param PackageConfig $packageConfig
+     * @param PackageConfig|null $packageConfig
      *
      * @return void
      */
-    protected function bootingTranslations(PackageConfig $packageConfig): void
+    protected function bootingTranslations(?PackageConfig $packageConfig = null): void
     {
-        $langDir = $packageConfig->concatPath('lang');
+        $packageConfig ??= $this->bootraiserPackage();
+        $langDir       = $packageConfig->concatPath('lang');
         if (is_dir($langDir)) {
             $serviceProvider = $this->parentServiceProvider();
             $serviceProvider->loadTranslationsFrom($langDir, $packageConfig->getVendorPackageName());
@@ -257,13 +279,14 @@ trait Bootraiser
     /**
      * Enable blade views in laravel or publish
      *
-     * @param PackageConfig $packageConfig
+     * @param PackageConfig|null $packageConfig
      *
      * @return void
      */
-    protected function bootingViews(PackageConfig $packageConfig): void
+    protected function bootingViews(?PackageConfig $packageConfig = null): void
     {
-        $viewsDir = $packageConfig->concatPath('resources/views');
+        $packageConfig ??= $this->bootraiserPackage();
+        $viewsDir      = $packageConfig->concatPath('resources/views');
         if (is_dir($viewsDir)) {
             $serviceProvider = $this->parentServiceProvider();
             $serviceProvider->loadViewsFrom($viewsDir, $packageConfig->getNamespace());
@@ -291,7 +314,7 @@ trait Bootraiser
      *
      * @throws ReflectionException
      */
-    protected function bootingCommands(PackageConfig $packageConfig): void
+    protected function bootingCommands(?PackageConfig $packageConfig = null): void
     {
         $commandDir = $packageConfig->concatPath('src/Console/Commands');
         if (app()->runningInConsole() && is_dir($commandDir)) {
@@ -317,13 +340,14 @@ trait Bootraiser
      *
      * @see https://laravel.com/docs/11.x/packages#publishing-file-groups
      *
-     * @param PackageConfig $packageConfig
+     * @param PackageConfig|null $packageConfig
      *
      * @return void
      */
-    protected function bootingConfig(PackageConfig $packageConfig): void
+    protected function bootingConfig(?PackageConfig $packageConfig = null): void
     {
-        $configFile = $this->helperConfigFiles($packageConfig);
+        $packageConfig ??= $this->bootraiserPackage();
+        $configFile    = $this->helperConfigFiles($packageConfig);
         if ($configFile) {
             $this->parentServiceProvider()
                  ->publishes(
@@ -337,13 +361,14 @@ trait Bootraiser
     /**
      * Called via registering
      *
-     * @param PackageConfig $packageConfig
+     * @param PackageConfig|null $packageConfig
      *
      * @return void
      */
-    protected function registeringConfig(PackageConfig $packageConfig): void
+    protected function registeringConfig(?PackageConfig $packageConfig = null): void
     {
-        $configFile = $this->helperConfigFiles($packageConfig);
+        $packageConfig ??= $this->bootraiserPackage();
+        $configFile    = $this->helperConfigFiles($packageConfig);
         if ($configFile) {
             $this->parentServiceProvider()
                  ->mergeConfigFrom($configFile, $packageConfig->groupOrVendorName())
@@ -354,14 +379,14 @@ trait Bootraiser
     /**
      * Locate the config DRY
      *
-     * @param PackageConfig $packageConfig
+     * @param PackageConfig|null $packageConfig
      *
      * @return string|null
      * @internal
      */
-    protected function helperConfigFiles(PackageConfig $packageConfig): ?string
+    protected function helperConfigFiles(?PackageConfig $packageConfig = null): ?string
     {
-        $configFile = $packageConfig->concatPath('config/config.php');
+        $configFile = ($packageConfig ?? $this->bootraiserPackage())->concatPath('config/config.php');
 
         return is_file($configFile) ? $configFile : null;
     }

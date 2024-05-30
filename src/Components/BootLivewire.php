@@ -16,38 +16,38 @@ use Symfony\Component\Finder\Finder;
  */
 class BootLivewire implements BootableComponentInterface
 {
-	/**
-	 * Booting Livewire if exists
-	 *
-	 * @param PackageConfig $config
-	 * @param mixed         ...$params
-	 *
-	 * @return void
-	 */
-	public function booting(PackageConfig $config, ...$params): void
-	{
-		$livewireDir = $config->concatPath('src/Livewire/');
-		if (is_dir($livewireDir)) {
-			$finder = Finder::create()
-							->files()
-							->in($livewireDir)
-							->name('*.php')
-			;
+    /**
+     * Booting Livewire if exists
+     *
+     * @param PackageConfig $packageConfig
+     * @param mixed         ...$params
+     *
+     * @return void
+     */
+    public function booting(PackageConfig $packageConfig, ...$params): void
+    {
+        $livewireDir = $packageConfig->concatPath('src/Livewire/');
+        if (is_dir($livewireDir)) {
+            $finder = Finder::create()
+                            ->files()
+                            ->in($livewireDir)
+                            ->name('*.php')
+            ;
 
-			foreach ($finder->getIterator() as $file) {
-				$cls           = $file->getBasename('.php');
-				$className     = $config->concatNamespace('Livewire\\'.$cls);
-				$componentName = Str::of($cls)
-									->explode('/')
-									->filter()
-									->map([Str::class, 'kebab'])
-									->implode('.')
-				;
+            foreach ($finder->getIterator() as $file) {
+                $cls           = $file->getBasename('.php');
+                $className     = $packageConfig->concatNamespace('Livewire\\' . $cls);
+                $componentName = Str::of($cls)
+                                    ->explode('/')
+                                    ->filter()
+                                    ->map([Str::class, 'kebab'])
+                                    ->implode('.')
+                ;
 
-				if (class_exists(Livewire::class) && class_exists($className)) {
-					Livewire::component($config->getVendorPackageName().'::'.$componentName, $className);
-				}
-			}
-		}
-	}
+                if (class_exists(Livewire::class) && class_exists($className)) {
+                    Livewire::component($packageConfig->getVendorPackageName() . '::' . $componentName, $className);
+                }
+            }
+        }
+    }
 }

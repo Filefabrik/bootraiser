@@ -10,5 +10,5 @@ use Filefabrik\Bootraiser\Support\PackageConfig;
 
 interface BootableComponentInterface
 {
-	public function booting(PackageConfig $config, ...$parameters);
+	public function booting(PackageConfig $packageConfig, ...$params);
 }
