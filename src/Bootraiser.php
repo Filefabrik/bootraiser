@@ -316,7 +316,8 @@ trait Bootraiser
      */
     protected function bootingCommands(?PackageConfig $packageConfig = null): void
     {
-        $commandDir = $packageConfig->concatPath('src/Console/Commands');
+        $packageConfig ??= $this->bootraiserPackage();
+        $commandDir    = $packageConfig->concatPath('src/Console/Commands');
         if (app()->runningInConsole() && is_dir($commandDir)) {
             $finder = Finder::create()
                             ->files()
