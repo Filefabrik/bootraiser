@@ -47,6 +47,21 @@ trait Bootraiser
     }
 
     /**
+     * Methods called from the YourPackageServiceProvider::register()
+     *
+     * @param PackageConfig $packageConfig
+     * @param array         $registeringParts
+     *
+     * @return void
+     */
+    protected function integrateBootraiserServices(PackageConfig $packageConfig, array $registeringParts): void
+    {
+        foreach ($registeringParts as $bootingPart) {
+            $this->integrateBootraiserService($packageConfig, $bootingPart);
+        }
+    }
+
+    /**
      * Booting Helper while created this package with filefabrik/paxsy.
      * You can customize the booting methods or write your own booting.
      * The paxsy booting methods do not have any dependency magic
@@ -72,6 +87,17 @@ trait Bootraiser
     protected function registerBootraiserService(PackageConfig $packageConfig, string $registeringPart): bool
     {
         return $this->callPackageMethod($packageConfig, 'registering', $registeringPart);
+    }
+
+    /**
+     * @param PackageConfig $packageConfig
+     * @param string        $registeringPart
+     *
+     * @return bool
+     */
+    protected function integrateBootraiserService(PackageConfig $packageConfig, string $registeringPart): bool
+    {
+        return $this->callPackageMethod($packageConfig, 'integrate', $registeringPart);
     }
 
     /**
@@ -173,6 +199,23 @@ trait Bootraiser
                      $packageConfig->concatGroupName('migrations'),
                  )
             ;
+        }
+    }
+
+    /**
+     * If integrated on `php artisan migrate:status` these migrations will be offered and executed
+     *
+     * @param PackageConfig $packageConfig
+     *
+     * @return void
+     */
+    protected function integrateMigrations(PackageConfig $packageConfig): void
+    {
+        $migrationDir = $packageConfig->concatPath('database/migrations');
+        if (is_dir($migrationDir)) {
+            // not need to publish migrations.
+            // migrations are available directly from package
+            $this->loadMigrationsFrom($migrationDir);
         }
     }
 

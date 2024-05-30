@@ -32,14 +32,20 @@ trait WithBootraiser
         $this->bootBootraiserServices($this->bootraiserConfig(), $flat);
     }
 
+    protected function bootraiserIntegrate(...$parts): void
+    {
+        $flat = Arr::flatten([...$parts]);
+        $this->integrateBootraiserServices($this->bootraiserConfig(), $flat);
+    }
+
     protected function bootraiserConfig($config = null): PackageConfig
     {
         if ($this->packageConfig && !$config) {
             return $this->packageConfig;
         }
 
-       $packageName= Str::beforeLast(static::class,'\\Support\\');
+        $packageName = Str::beforeLast(static::class, '\\Support\\');
+
         return $this->packageConfig = BootraiserManager::getPackageConfig($packageName, $config ?? $this);
     }
-
 }

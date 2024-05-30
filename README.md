@@ -1,13 +1,20 @@
 # Bootraiser
 
-Booting Utility for Laravel custom Packages   
+Booting Utility for Laravel custom Packages
+
+### Features
+
+* Bootraiser saves you all the boilerplate required for a Laravel package.
+* Bootraiser can be easily integrated into existing packages.
 
 If you write your own Laravel packages, parts of your package usually have to be booted in Laravel.
 
 This can sometimes cost an unnecessary amount of time.
 
-Filefabrik-Bootraiser provides you with all important Laravel boot methods immediately and without much configuration effort.
-It is also quite cool if the Laravel “publish” methods are supported so that views|translations|config overrides can be published later.
+Filefabrik-Bootraiser provides you with all important Laravel boot methods immediately and without much configuration
+effort.
+It is also quite cool if the Laravel “publish” methods are supported so that views|translations|config overrides can be
+published later.
 
 * github-project: https://github.com/Filefabrik/bootraiser
 * packagist.org: https://packagist.org/packages/filefabrik/bootraiser
@@ -16,12 +23,12 @@ It is also quite cool if the Laravel “publish” methods are supported so that
 
 Installation:
 
-
 ```shell
 composer require filefabrik/bootraiser
 ```
 
 If you only want to use Bootraiser during development, integrate the bootraiser package with:
+
 ```shell
 composer require filefabrik/bootraiser --dev
 ```
@@ -81,7 +88,7 @@ class YourPackageServiceProvider extends ServiceProvider
 
 2. Then which components you want to boot with Bootraiser as an Array.
 
-  Note: You can enter all parts as boot parts. Bootraiser only boots the parts that are actually in your package.
+Note: You can enter all parts as boot parts. Bootraiser only boots the parts that are actually in your package.
 
 ## Split Bootraiser Boot process
 
@@ -130,15 +137,36 @@ The following boot mechanisms are available to you:
 
 @see https://laravel.com/docs/11.x/packages#routes
 
-### boot `Migrations`
+### boot `Migrations` (publish migrations into Laravel migration directory)
 
-`packages/your-package/database/migrations/*`
+Offers migration files for publishing `packages/your-package/database/migrations/*`
 
 ```shell
 php artisan vendor:publish --tag=your-package-migrations
 ```
 
 @see https://laravel.com/docs/11.x/packages#migrations
+
+#### integrate `Migrations` without publishing
+
+It is not necessary to publish the migration files of the package. Bootraiser can make the migrations available for each
+package individually in the command `php artisan migrate:status`
+
+To do this, place the following snippet in your register or boot method
+
+```php
+ public function register(){
+    $this->bootraiserIntegrate('Migrations')
+ }
+```
+
+#### without integrate Migrations
+
+![2024-05-30_10-17](./assets/2024-05-30_10-17.webp)
+
+#### with integrate Migrations
+
+![2024-05-30_10-18](./assets/2024-05-30_10-18.webp)
 
 ### boot `Translations` (Language-Files)
 
@@ -158,6 +186,7 @@ https://laravel.com/docs/11.x/packages#language-files
 ```shell
 php artisan vendor:publish --tag=your-package-views
 ```
+
 * register your package to view components
 
 @see https://laravel.com/docs/11.x/packages#views
@@ -170,7 +199,6 @@ Boot your commands if any are existing, and if you handle laravel at the moment 
 
 @see https://laravel.com/docs/11.x/packages#commands
 
-
 ### boot `Config`
 
 `packages/your-package/config/config.php`
@@ -178,7 +206,8 @@ Boot your commands if any are existing, and if you handle laravel at the moment 
 ```shell
 php artisan vendor:publish --tag=your-package-config
 ```
-`config` is singular! 
+
+`config` is singular!
 
 will output to `config/your-package.php` or with custom `$packageConfig->setGroupName('cooler')` to `config/cooler.php`
 
@@ -189,13 +218,14 @@ please see under [Advanced usage](#advanced-usage) for a little bit more functio
 ### boot `Livewire`
 
 If you create your own Livewire views, Livewire is also supported and booted.
+
 * blade directory: `packages/your-package/resource/views/livewire/*`
 * Livewire Component Directory `packages/your-package/src/Livewire/`
 
-
-
 ### A note on vendor:publish --tag=“your-package”-views|translations|migrations
-If your package name is too long or cumbersome to create a memorable group name, simply set a different identifier for the group names
+
+If your package name is too long or cumbersome to create a memorable group name, simply set a different identifier for
+the group names
 
 ```php
 <?php 
@@ -203,6 +233,7 @@ If your package name is too long or cumbersome to create a memorable group name,
 $this->bootraiserConfig()->setGroupName('cooler');
 ?>
 ```
+
 Now all your publish tag options will look like `--tag=cooler-views`
 
 ```shell
@@ -223,13 +254,13 @@ All DatabaseSeeder.php they are tracked by Bootraiser will be executed `--main`
 
 ![2024-05-28_17-53](./assets/2024-05-28_17-53.webp)
 
-Choose a seeder that you would like to perform 
+Choose a seeder that you would like to perform
 
 ![2024-05-28_17-54](./assets/2024-05-28_17-54.webp)
 
 So that you can execute database seeders for packages, the db:seed command has been extended by the following options.
 
-#### `--main` database Seeders 
+#### `--main` database Seeders
 
 ```shell
 php artisan bootraiser:seed --main
@@ -240,6 +271,7 @@ With the --all flag all DatabaseSeeder are executed in DatabaseSeeder.php.
 For example, all executed DatabaseSeeders:
 
 The Laravel Application Seeder
+
 * ~./database/seeders/DatabaseSeeder.php
 
 And for packages they are using bootraiser:
@@ -249,15 +281,13 @@ And for packages they are using bootraiser:
 
 @see https://laravel.com/docs/11.x/seeding#running-seeders
 
-
-
 ## Advanced usage
-
 
 If you want to make your config publishable,
 you would also have to adapt the YourServiceProvider::register() as follows
 
 While using in YourServiceProvider the register(), and boot() methods use a better the following Schema:
+
 ```php
 <?php
 
@@ -312,23 +342,25 @@ class YourPackageServiceProvider extends ServiceProvider
 
 https://laravel.com/docs/11.x/packages#default-package-configuration
 
+## Todos
 
-## Todos 
+* for each vendor/package using bootraiser gives the ability to show all publish-tags within the package used/enabled.
+  So developers' Documentation of the package can be written easier. Something like this:
 
-* for each vendor/package using bootraiser gives the ability to show all publish-tags within the package used/enabled. So developers' Documentation of the package can be written easier. Something like this:
 ```shell
 php artisan bootraiser:show {packagename}
 ```
 
-* If there are many own custom packages, maybe it is good to allow caching the bootraiser booting-parts. So the discovering/booting/registering of own packages will be faster in live-environments. 
-* In conjunction with caching, enable or disable a package from caching. The reason is, you are developing in the specific package, other packages are not under development.  
+* If there are many own custom packages, maybe it is good to allow caching the bootraiser booting-parts. So the
+  discovering/booting/registering of own packages will be faster in live-environments.
+* In conjunction with caching, enable or disable a package from caching. The reason is, you are developing in the
+  specific package, other packages are not under development.
 * for env.testing the migrations should be available to the testing database but not to be published.
-
 
 todo reflection command to show which laravel-components are inside such as seeder or livewire or or or.
 todo default database seeder in a package is the class `DatabaseSeeder` from there the method db:seed has to be run
 todo with explizit class name, the explizit class will be run
-todo with flag --package or and with a class in the package directory 
+todo with flag --package or and with a class in the package directory
 todo describe db seeder (with "")
 `php artisan db:seed "\DemoPackage\TryCommandOptions\Database\Seeders\MySeeder"`
 `php artisan db:seed --class="\DemoPackage\TryCommandOptions\Database\Seeders\MySeeder"`
