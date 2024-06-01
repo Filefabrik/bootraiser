@@ -7,8 +7,10 @@
 
 namespace Filefabrik\Bootraiser;
 
+use Exception;
 use Filefabrik\Bootraiser\Support\PackageConfig;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class BootraiserManager
 {
@@ -19,6 +21,9 @@ class BootraiserManager
      */
     protected array $packageConfigs = [];
 
+    /**
+     * @throws Exception
+     */
     public static function getPackageConfig(string                             $name,
                                             null|PackageConfig|ServiceProvider $config = null): PackageConfig
     {
@@ -36,7 +41,7 @@ class BootraiserManager
         return $instance->packageConfigs[$name] = PackageConfig::from($config);
     }
 
-    public static function get()
+    public static function get(): BootraiserManager
     {
         return self::$instance ??= new self();
     }
@@ -46,29 +51,36 @@ class BootraiserManager
      */
     public static function getPackages(): array
     {
-        return self::get()->getPackageConfigs();
+        return self::get()
+                   ->getPackageConfigs()
+        ;
     }
-
 
     public static function searchPackage(string $name): ?PackageConfig
     {
         // more searchable stuff via iterating each pa
         $instance = self::get();
-        if ($instance) {
-            // search via index
-            $found = $instance->packageConfigs[$name] ?? null;
-            if ($found) {
-                return $found;
+
+        // search via index
+        $found = $instance->packageConfigs[$name] ?? null;
+        if ($found) {
+            return $found;
+        }
+
+        foreach ($instance->packageConfigs as $packageConfig) {
+            $haystack = [$packageConfig->getGroupName(),
+                         $packageConfig->getVendorPackageName(),
+                         $packageConfig->groupOrVendorName()];
+
+            if (in_array($name, $haystack)) {
+                return $packageConfig;
             }
-            foreach ($instance->packageConfigs as $packageConfig) {
-                if (
-                    in_array($name,
-                             [$packageConfig->getGroupName(),
-                              $packageConfig->getVendorPackageName(),
-                              $packageConfig->groupOrVendorName()])
-                ) {
-                    return $packageConfig;
-                }
+
+            // try to find if name is a full path.
+            $packageBasePath = Str::beforeLast($name, '/src') . '/';
+            // simple compare locations
+            if ($packageBasePath === $packageConfig->getBasePath()) {
+                return $packageConfig;
             }
         }
 

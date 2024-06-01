@@ -37,7 +37,7 @@ trait Bootraiser
         if ($this->bootraiserPackage && !$config) {
             return $this->bootraiserPackage;
         }
-
+        // for each package only one instance, if need create another method to handle the full namespaced ServiceProviders
         $packageName = Str::beforeLast(static::class, '\\Support\\');
 
         return $this->bootraiserPackage = BootraiserManager::getPackageConfig($packageName, $config ?? $this);

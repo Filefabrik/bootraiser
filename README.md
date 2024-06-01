@@ -342,6 +342,59 @@ class YourPackageServiceProvider extends ServiceProvider
 
 https://laravel.com/docs/11.x/packages#default-package-configuration
 
+### Events
+
+Bootraiser handles also package events by the following conventions.
+
+* the Package must contain under `/src/Providers/` a service provider which extends the Laravel `EventServiceProvider` Class
+* Insert `"Filefabrik\\BootraiserDemo\\Providers\\BootraiserDemoEventServiceProvider"` into the Package composer.json 
+
+##### BootraiserDemoEventServiceProvider EventServiceProvider 
+```php
+<?php
+
+namespace Filefabrik\BootraiserDemo\Providers;
+
+use Filefabrik\Bootraiser\WithBootraiserEvent;
+use Illuminate\Foundation\Support\Providers\EventServiceProvider;
+
+class BootraiserDemoEventServiceProvider extends EventServiceProvider
+{
+    // Magic for Events
+    use WithBootraiserEvent;
+
+    public function register()
+    {
+        // call parent::register() is mandatory!
+        parent::register();
+        $this->bootraiserRegister('Events');
+    }
+}
+
+```
+
+##### package composer.json
+
+```json lines
+...
+"extra": {
+        "laravel": {
+            "providers": [
+                "Filefabrik\\BootraiserDemo\\Providers\\BootraiserDemoServiceProvider",
+                "Filefabrik\\BootraiserDemo\\Providers\\BootraiserDemoEventServiceProvider"
+            ]
+        }
+    }
+...
+```
+
+Remember to run the Laravel Host composer.json 
+```shell
+composer update
+```
+
+
+
 ## Todos
 
 * for each vendor/package using bootraiser gives the ability to show all publish-tags within the package used/enabled.
@@ -369,3 +422,5 @@ todo describe db seeder (with "")
 * todo migrations
 * own migrations such as bootraiser:migrate
 * display packages migrations, allow refresh with paths from selecting. with display the console command. during package development, table migrations are often changed 
+* bootraiser should become a "once" method with them EventServiceProvider or FancyServiceProvider can not call the same "booting" command again
+* a global config outside the package with this, developers are able to disable or enable "boot" methods they are hardcoded in the package.
