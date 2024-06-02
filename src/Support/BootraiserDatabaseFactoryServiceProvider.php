@@ -47,9 +47,9 @@ class BootraiserDatabaseFactoryServiceProvider extends DatabaseServiceProvider
 	protected function factoryResolverMethod(): Closure
 	{
 		return self::$bootraiserFactoryResolver ??= function(string $modelName) {
-			$packages     = BootraiserManager::getPackages();
+
 			$appNamespace = self::appNamespace();
-			foreach ($packages as $package) {
+			foreach (BootraiserManager::getPackages() as $package) {
 				// todo Factory Namespace via package composer Reader
 				$packageNamespace = $package->getNamespace();
 				if (Str::startsWith($modelName, [$packageNamespace, $packageNamespace.'Models\\'])) {
@@ -77,7 +77,6 @@ class BootraiserDatabaseFactoryServiceProvider extends DatabaseServiceProvider
 	protected function modelResolverMethod(): Closure
 	{
 		return self::$bootraiserModelResolver ??= function(Factory $factory) {
-			$packages = BootraiserManager::getPackages();
 
 			$factoryBasename           = Str::replaceLast('Factory', '', class_basename($factory));
 			$namespacedFactoryBasename = Str::replaceLast(
@@ -86,7 +85,8 @@ class BootraiserDatabaseFactoryServiceProvider extends DatabaseServiceProvider
 				Str::replaceFirst(Factory::$namespace, '', get_class($factory)),
 			);
 			$appNamespace = self::appNamespace();
-			foreach ($packages as $package) {
+
+			foreach (BootraiserManager::getPackages() as $package) {
 				// todo Factory Namespace via package composer Reader
 				$packageNamespace = $package->getNamespace();
 
@@ -145,8 +145,9 @@ class BootraiserDatabaseFactoryServiceProvider extends DatabaseServiceProvider
 
 			$appNamespace = self::appNamespace();
 
-			return class_exists($appNamespace.'Models\\'.$namespacedFactoryBasename)
-				? $appNamespace.'Models\\'.$namespacedFactoryBasename
+            $modelsNamespace=$appNamespace.'Models\\'.$namespacedFactoryBasename;
+			return class_exists($modelsNamespace)
+				? $modelsNamespace
 				: $appNamespace.$factoryBasename;
 		};
 	}
