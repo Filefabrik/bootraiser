@@ -26,7 +26,7 @@
         "ready to use boot utility",
         "laravel package development",
         "laravel 11",
-        "livewire 3",
+        "livewire 3"
 
     ],
     "require-dev": {

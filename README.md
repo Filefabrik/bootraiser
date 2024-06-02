@@ -6,6 +6,8 @@ Booting Utility for Laravel custom Packages
 
 * Bootraiser saves you all the boilerplate required for a Laravel package.
 * Bootraiser can be easily integrated into existing packages.
+* Bootraiser is completely based on laravel
+* no “extra-magic” packages necessary
 
 If you write your own Laravel packages, parts of your package usually have to be booted in Laravel.
 
@@ -160,7 +162,7 @@ To do this, place the following snippet in your register or boot method
  }
 ```
 
-#### without integrate Migrations
+#### without integrating Migrations
 
 ![2024-05-30_10-17](./assets/2024-05-30_10-17.webp)
 
@@ -228,6 +230,15 @@ boot livewire will support the dotted namespaces (will also work without the pax
 
 ![2024-06-02_09-55](./assets/2024-06-02_09-55.webp)
 
+Booting Livewire will also be displayed in Laravel's debug-bar
+
+![2024-06-02_16-20](./assets/2024-06-02_16-20.webp)
+
+note: Laravel Debug-Bar can be installed via 
+```shell
+composer install barryvdh/laravel-debugbar --dev
+```
+
 
 
 ### A note on vendor:publish --tag=“your-package”-views|translations|migrations
@@ -258,9 +269,7 @@ php artisan bootraiser:seed
 
 ![2024-05-28_17-53_1](./assets/2024-05-28_17-53_1.webp)
 
-All DatabaseSeeder.php they are tracked by Bootraiser will be executed `--main`
 
-![2024-05-28_17-53](./assets/2024-05-28_17-53.webp)
 
 Choose a seeder that you would like to perform
 
@@ -270,11 +279,15 @@ So that you can execute database seeders for packages, the db:seed command has b
 
 #### `--main` database Seeders
 
+All DatabaseSeeder.php they are tracked by Bootraiser will be executed `--main`
+
+![2024-05-28_17-53](./assets/2024-05-28_17-53.webp)
+
 ```shell
 php artisan bootraiser:seed --main
 ```
 
-With the --all flag all DatabaseSeeder are executed in DatabaseSeeder.php.
+With the `--main` flag all DatabaseSeeder are executed in DatabaseSeeder.php.
 
 For example, all executed DatabaseSeeders:
 
