@@ -27,6 +27,11 @@ class BootLivewire implements BootableComponentInterface
     public function booting(PackageConfig $packageConfig, ...$params): void
     {
         $livewireDir = $packageConfig->concatPath('src/Livewire/');
+
+        // todo make caching/bootstrapping available via PackageConfig or/and BootraiserManager to speed-up livewire loading
+        // todo strategies view:cache PackageConfig BootraiserManager
+        // todo for fully prod application / for mixed dev and prod / to prevent from packages they are ready developed
+
         if (is_dir($livewireDir)) {
             $finder = Finder::create()
                             ->files()
@@ -35,9 +40,11 @@ class BootLivewire implements BootableComponentInterface
             ;
 
             foreach ($finder->getIterator() as $file) {
-                $cls           = $file->getBasename('.php');
+                // uncool methods, move outside
+                $relDir        = Str::before($file->getRelativePathname(), '.php');
+                $cls           = str_replace('/', '\\', $relDir);
                 $className     = $packageConfig->concatNamespace('Livewire\\' . $cls);
-                $componentName = Str::of($cls)
+                $componentName = Str::of($relDir)
                                     ->explode('/')
                                     ->filter()
                                     ->map([Str::class, 'kebab'])

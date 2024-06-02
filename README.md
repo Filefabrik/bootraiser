@@ -222,6 +222,14 @@ If you create your own Livewire views, Livewire is also supported and booted.
 * blade directory: `packages/your-package/resource/views/livewire/*`
 * Livewire Component Directory `packages/your-package/src/Livewire/`
 
+boot livewire will support the dotted namespaces (will also work without the paxsy generator)
+
+![2024-06-02_09-52](./assets/2024-06-02_09-52.webp)
+
+![2024-06-02_09-55](./assets/2024-06-02_09-55.webp)
+
+
+
 ### A note on vendor:publish --tag=“your-package”-views|translations|migrations
 
 If your package name is too long or cumbersome to create a memorable group name, simply set a different identifier for
