@@ -1,7 +1,6 @@
 <?php declare(strict_types=1);
 /**
  * PHP version 8.2
- *
  */
 /** @copyright-header * */
 
@@ -12,7 +11,5 @@ namespace Filefabrik\Bootraiser\Concerns;
  */
 class DatabaseFactory
 {
-
-// after booting, check the Override has to initialized
-
+	// after booting, check the Override has to initialized
 }

@@ -1,7 +1,6 @@
 <?php declare(strict_types=1);
 /**
  * PHP version 8.2
- *
  */
 /** @copyright-header * */
 
@@ -11,23 +10,27 @@ use Symfony\Component\Finder\Finder;
 
 class FindSeeders
 {
+	public static function databaseSeeder(string $path): ?string
+	{
+		$concatenatedPath = $path.'/DatabaseSeeder.php';
 
-    public static function databaseSeeder(string $path): ?string
-    {
-        $concatenatedPath = $path . '/DatabaseSeeder.php';
+		return file_exists($concatenatedPath) ? $concatenatedPath : null;
+	}
 
-        return file_exists($concatenatedPath) ? $concatenatedPath : null;
-    }
+	/**
+	 * @param string $path
+	 *
+	 * @return Finder|null
+	 */
+	public static function databaseSubSeeders(string $path): ?Finder
+	{
+		$finder = Finder::create()
+						->files()
+						->in($path)
+						->notName('DatabaseSeeder.php')
+						->name('*.php')
+		;
 
-    public static function databaseSubSeeders(string $path)
-    {
-        $finder = Finder::create()
-                        ->files()
-                        ->in($path)
-                        ->notName('DatabaseSeeder.php')
-                        ->name('*.php')
-        ;
-
-        return $finder->hasResults() ? $finder : null;
-    }
+		return $finder->hasResults() ? $finder : null;
+	}
 }

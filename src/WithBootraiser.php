@@ -1,7 +1,6 @@
 <?php declare(strict_types=1);
 /**
  * PHP version 8.2
- *
  */
 /** @copyright-header * */
 
@@ -14,24 +13,23 @@ use Illuminate\Support\Arr;
  */
 trait WithBootraiser
 {
-    use Bootraiser;
+	use Bootraiser;
 
-    protected function bootraiserRegister(...$parts): void
-    {
-        $flat = Arr::flatten([...$parts]);
-        $this->registerBootraiserServices($flat);
-    }
+	protected function bootraiserRegister(...$parts): void
+	{
+		$flat = Arr::flatten([...$parts]);
+		$this->registerBootraiserServices($flat);
+	}
 
-    protected function bootraiserBoot(...$parts): void
-    {
-        $flat = Arr::flatten([...$parts]);
-        $this->bootBootraiserServices($flat);
-    }
+	protected function bootraiserBoot(...$parts): void
+	{
+		$flat = Arr::flatten([...$parts]);
+		$this->bootBootraiserServices($flat);
+	}
 
-    protected function bootraiserIntegrate(...$parts): void
-    {
-        $flat = Arr::flatten([...$parts]);
-        $this->integrateBootraiserServices($flat);
-    }
-
+	protected function bootraiserIntegrate(...$parts): void
+	{
+		$flat = Arr::flatten([...$parts]);
+		$this->integrateBootraiserServices($flat);
+	}
 }

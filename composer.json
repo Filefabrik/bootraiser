@@ -1,7 +1,7 @@
 {
     "name": "filefabrik/bootraiser",
-    "version": "1.0.14",
-    "description": "laravel boot helper for your custom packages",
+    "version": "1.0.15",
+    "description": "Laravel boot helper for custom packages",
     "type": "library",
     "license": "MIT",
     "autoload": {
@@ -24,9 +24,10 @@
     ],
     "keywords": [
         "ready to use boot utility",
+        "laravel package development",
         "laravel 11",
         "livewire 3",
-        "package development"
+
     ],
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.14",

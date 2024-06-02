@@ -1,7 +1,6 @@
 <?php declare(strict_types=1);
 /**
  * PHP version 8.2
- *
  */
 /** @copyright-header * */
 
@@ -14,194 +13,193 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use function Laravel\Prompts\suggest;
 use Symfony\Component\Console\Input\InputOption;
 use UnexpectedValueException;
-use function Laravel\Prompts\suggest;
 
 trait TraitSeedCommand
 {
-    public function handle(): int
-    {
-        if (!$this->confirmToProceed()) {
-            return 1;
-        }
+	public function handle(): int
+	{
+		if (! $this->confirmToProceed()) {
+			return 1;
+		}
 
-        $callParent = false;
+		$callParent = false;
 
-        $suggestSeeder = new SuggestSeeders();
+		$suggestSeeder = new SuggestSeeders();
 
-        $menu = $suggestSeeder->mainMenu();
+		$menu = $suggestSeeder->mainMenu();
 
-        if ('list_all_seeder' === $menu) {
-            $opts           = $suggestSeeder->packagesSeedersOptions();
-            $selectedSeeder = suggest(label  : 'all seeders',
-                                      options: fn($value) => (new Collection($opts ?? []))
-                    ->filter(fn($title) => str_contains(Str::lower($title), Str::lower($value)))
-                    ->all(),
-                                      scroll : 10);
+		if ('list_all_seeder' === $menu) {
+			$opts           = $suggestSeeder->packagesSeedersOptions();
+			$selectedSeeder = suggest(
+				label  : 'all seeders',
+				options: fn($value) => (new Collection($opts ?? []))
+					->filter(fn($title) => str_contains(Str::lower($title), Str::lower($value)))
+					->all(),
+				scroll : 10
+			);
 
-            $classToSeed = $suggestSeeder->selectedSeeder($selectedSeeder);
+			$classToSeed = $suggestSeeder->selectedSeeder($selectedSeeder);
 
-            if ($classToSeed) {
-                $this->input->setArgument('class', $classToSeed);
-                $this->info('cli command which will be called:');
-                $this->info('php artisan db:seed "' . $classToSeed . '"');
-                $callParent = true;
-            }
-            else {
-                throw new UnexpectedValueException($selectedSeeder . ' seeder not found');
-            }
-        }
-        if (!$menu) {
-            $callParent = true;
-        }
-        elseif ('main' === $menu) {
-            $this->input->setOption('main', true);
-            $callParent = true;
-        }
+			if ($classToSeed) {
+				$this->input->setArgument('class', $classToSeed);
+				$this->info('cli command which will be called:');
+				$this->info('php artisan db:seed "'.$classToSeed.'"');
+				$callParent = true;
+			} else {
+				throw new UnexpectedValueException($selectedSeeder.' seeder not found');
+			}
+		}
+		if (! $menu) {
+			$callParent = true;
+		} elseif ('main' === $menu) {
+			$this->input->setOption('main', true);
+			$callParent = true;
+		}
 
-        return $callParent ? parent::handle() : self::FAILURE;
-    }
+		return $callParent ? parent::handle() : self::FAILURE;
+	}
 
-    /**
-     * @throws BindingResolutionException
-     */
-    protected function getSeeder(): Seeder|null
-    {
-        return $this->handleOverrideSeeders() ? null : parent::getSeeder();
-    }
+	/**
+	 * @throws BindingResolutionException
+	 */
+	protected function getSeeder(): Seeder|null
+	{
+		return $this->handleOverrideSeeders() ? null : parent::getSeeder();
+	}
 
-    /**
-     * the real magic, handles the packages they are under BootraiserManager registered
-     *
-     * @return bool
-     * @throws BindingResolutionException
-     */
-    protected function handleOverrideSeeders(): bool
-    {
-        $hasMainOption = $this->option('main');
+	/**
+	 * the real magic, handles the packages they are under BootraiserManager registered
+	 *
+	 * @return bool
+	 * @throws BindingResolutionException
+	 */
+	protected function handleOverrideSeeders(): bool
+	{
+		$hasMainOption = $this->option('main');
 
-        if ($hasMainOption) {
-            $packages = BootraiserManager::packages();
+		if ($hasMainOption) {
+			$packages = BootraiserManager::packages();
 
-            $suggest = new SuggestSeeders();
-            if (count($packages)) {
-                foreach ($packages as $package) {
-                    // 1 item with a bool flag, nothing else needed
-                    $packageSeeders = $suggest->getPackageSeeders($package);
+			$suggest = new SuggestSeeders();
+			if (count($packages)) {
+				foreach ($packages as $package) {
+					// 1 item with a bool flag, nothing else needed
+					$packageSeeders = $suggest->getPackageSeeders($package);
 
-                    if ($packageSeeders->get('DatabaseSeeder')) {
-                        $seederClass = $package->concatNamespace('Database\Seeders\DatabaseSeeder');
+					if ($packageSeeders->get('DatabaseSeeder')) {
+						$seederClass = $package->concatNamespace('Database\Seeders\DatabaseSeeder');
 
-                        $this->seedClass($seederClass);
-                    }
-                }
-            }
+						$this->seedClass($seederClass);
+					}
+				}
+			}
 
-            if ($invocableSeeder = parent::getSeeder()) {
-                // call th DatabaseSeeder from laravel /databases/seeders/DatabaseSeeder.php
-                $this->invoker($invocableSeeder);
-            }
+			if ($invocableSeeder = parent::getSeeder()) {
+				// call th DatabaseSeeder from laravel /databases/seeders/DatabaseSeeder.php
+				$this->invoker($invocableSeeder);
+			}
 
-            return true;
-        }
+			return true;
+		}
 
-        $packageName = $this->option('package');
+		$packageName = $this->option('package');
 
-        if ($packageName) {
-            $package = BootraiserManager::searchPackage($packageName);
+		if ($packageName) {
+			$package = BootraiserManager::searchPackage($packageName);
 
-            // try sub-seeder
-            $classOption = $this->option('class');
-            if ($classOption) {
-                $availableSubSeeders = $package->getConfig('Seeders');
-                // searching the wanted seeder class in files
-                $foundClass = false;
-                foreach ($availableSubSeeders as $namespace) {
-                    if (Str::endsWith('\\' . $classOption, $namespace)) {
-                        $this->seedClass($namespace);
-                        $foundClass = true;
-                    }
-                }
+			// try sub-seeder
+			$classOption = $this->option('class');
+			if ($classOption) {
+				$availableSubSeeders = $package->getConfig('Seeders');
+				// searching the wanted seeder class in files
+				$foundClass = false;
+				foreach ($availableSubSeeders as $namespace) {
+					if (Str::endsWith('\\'.$classOption, $namespace)) {
+						$this->seedClass($namespace);
+						$foundClass = true;
+					}
+				}
 
-                if (!$foundClass) {
-                    $this->error('Seeder ' . $classOption . ' not found in ' . $packageName);
-                }
+				if (! $foundClass) {
+					$this->error('Seeder '.$classOption.' not found in '.$packageName);
+				}
 
-                // has executed, no parent call
-                return true;
-            }
+				// has executed, no parent call
+				return true;
+			}
 
-            // only the package DatabaseSeeder
-            if ($package && count($package->getConfig('DatabaseSeeder'))) {
-                $seederClass = $package->concatNamespace('Database\Seeders\DatabaseSeeder');
-                if (class_exists($seederClass)) {
-                    $this->seedClass($seederClass);
-                }
-                // else no class found, maybe miesconfigured bootraiser in a package config
-            }
+			// only the package DatabaseSeeder
+			if ($package && count($package->getConfig('DatabaseSeeder'))) {
+				$seederClass = $package->concatNamespace('Database\Seeders\DatabaseSeeder');
+				if (class_exists($seederClass)) {
+					$this->seedClass($seederClass);
+				}
+				// else no class found, maybe miesconfigured bootraiser in a package config
+			}
 
-            return true;
-        }
+			return true;
+		}
 
-        // has handelt overrides, if not handle the parent command
-        return false;
-    }
+		// has handelt overrides, if not handle the parent command
+		return false;
+	}
 
-    /**
-     * Invoke
-     *
-     * @param $namespacedClass
-     *
-     * @return void
-     * @throws BindingResolutionException
-     */
-    protected function seedClass($namespacedClass): void
-    {
-        $invocableSeeder = $this->laravel->make($namespacedClass)
-                                         ->setContainer($this->laravel)
-                                         ->setCommand($this)
-        ;
+	/**
+	 * Invoke
+	 *
+	 * @param $namespacedClass
+	 *
+	 * @return void
+	 * @throws BindingResolutionException
+	 */
+	protected function seedClass($namespacedClass): void
+	{
+		$invocableSeeder = $this->laravel->make($namespacedClass)
+										 ->setContainer($this->laravel)
+										 ->setCommand($this)
+		;
 
-        $this->invoker($invocableSeeder);
-    }
+		$this->invoker($invocableSeeder);
+	}
 
-    /**
-     * @param $invocableSeeder
-     *
-     * @return void
-     */
-    protected function invoker($invocableSeeder): void
-    {
-        // call th DatabaseSeeder from a Package
-        Model::unguarded(fn() => $invocableSeeder->__invoke());
-    }
+	/**
+	 * @param $invocableSeeder
+	 *
+	 * @return void
+	 */
+	protected function invoker($invocableSeeder): void
+	{
+		// call th DatabaseSeeder from a Package
+		Model::unguarded(fn() => $invocableSeeder->__invoke());
+	}
 
-    /**
-     * @return void
-     */
-    protected function configure(): void
-    {
-        parent::configure();
+	/**
+	 * @return void
+	 */
+	protected function configure(): void
+	{
+		parent::configure();
 
-        $this->getDefinition()
-             ->addOption(
-                 new InputOption(
-                     '--package',
-                     null,
-                     InputOption::VALUE_REQUIRED,
-                     'Seed command in a package which is using bootraiser',
-                 ),
-
-             )
-        ;
-        $this->getDefinition()
-             ->addOption(new InputOption(
-                             '--main',
-                             null,
-                             InputOption::VALUE_OPTIONAL,
-                             'Seeds the Laravel Base application seeder and all found "DatabaseSeeder" they are tracked with bootraiser in packages',
-                         ),)
-        ;
-    }
+		$this->getDefinition()
+			 ->addOption(
+			 	new InputOption(
+			 		'--package',
+			 		null,
+			 		InputOption::VALUE_REQUIRED,
+			 		'Seed command in a package which is using bootraiser',
+			 	),
+			 )
+		;
+		$this->getDefinition()
+			 ->addOption(new InputOption(
+			 	'--main',
+			 	null,
+			 	InputOption::VALUE_OPTIONAL,
+			 	'Seeds the Laravel Base application seeder and all found "DatabaseSeeder" they are tracked with bootraiser in packages',
+			 ), )
+		;
+	}
 }
