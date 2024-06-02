@@ -14,7 +14,7 @@
             "tests/testing_helper.php"
         ],
         "psr-4": {
-            "Filefabrik\\Bootraiser\\Tests\\": "/tests"
+            "Filefabrik\\Bootraiser\\Tests\\": "tests/"
         }
     },
     "authors": [

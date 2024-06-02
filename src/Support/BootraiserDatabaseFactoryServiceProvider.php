@@ -10,8 +10,8 @@ use Closure;
 use Filefabrik\Bootraiser\BootraiserManager;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\DatabaseServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -20,7 +20,7 @@ use Throwable;
  *
  * For your own Database
  */
-class BootraiserDatabaseFactoryServiceProvider extends ServiceProvider
+class BootraiserDatabaseFactoryServiceProvider extends DatabaseServiceProvider
 {
 	/**
 	 * @var Closure|null

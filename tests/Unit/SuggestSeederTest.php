@@ -4,11 +4,9 @@
  */
 /** @copyright-header * */
 
-namespace Filefabrik\Bootraiser\Tests\Concerns;
-
 use Filefabrik\Bootraiser\Concerns\SuggestSeeders;
 
-test(
+it(
 	'Suggest seeder',
 	function() {
 		$sSeeder = new SuggestSeeders();

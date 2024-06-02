@@ -24,7 +24,7 @@ class BootraiserServiceProvider extends ServiceProvider
 	/**
 	 * @return void
 	 */
-	public function boot()
+	public function boot(): void
 	{
 		$this->publishes(
 			[dirname(__DIR__, 2).'/config/config.php' => config_path('bootraiser.php')],

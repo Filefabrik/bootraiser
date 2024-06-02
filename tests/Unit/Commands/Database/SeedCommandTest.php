@@ -3,7 +3,7 @@
  * PHP version 8.2
  */
 /** @copyright-header * */
-test(
+it(
 	'Default Seed Command Test',
 	function() {
 		$this->artisan('db:seed')
