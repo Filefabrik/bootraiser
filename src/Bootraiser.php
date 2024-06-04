@@ -212,7 +212,7 @@ trait Bootraiser
 
     /**
      * Publish Migrations if need
-     *
+     * // todo make prefix for published migration files
      * @see https://laravel.com/docs/11.x/packages#migrations
      *
      * @param PackageConfig|null $packageConfig
@@ -224,6 +224,7 @@ trait Bootraiser
     {
         $packageConfig ??= $this->bootraiserPackage();
         $migrationDir  = $packageConfig->concatPath('database/migrations');
+
         if (is_dir($migrationDir)) {
             $pp = $this->parentServiceProvider();
     // laravel 11
@@ -236,11 +237,11 @@ trait Bootraiser
             }
             else {
                 // laravel 10 compatibility
-                $generator = function(string $directory): Generator {
+                $generator = function(string $directory) use ($packageConfig): Generator {
                     foreach ($this->app->make('files')
                                        ->allFiles($directory) as $file) {
                         yield $file->getPathname() => $this->app->databasePath(
-                            'migrations/' . now()->format('Y_m_d_His') . Str::after($file->getFilename(),
+                            'migrations/' . $packageConfig->groupOrVendorName().'_' . Str::after($file->getFilename(),
                                                                                     '00_00_00_000000'),
                         );
                     }
