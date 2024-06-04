@@ -127,7 +127,8 @@ class PackageConfig
 	 */
 	public function setBasePath(string $basePath): static
 	{
-		$this->basePath = realpath(Str::rtrim($basePath, '/')).'/';
+        // todo with pathering
+		$this->basePath = realpath(rtrim($basePath, '/')).'/';
 
 		return $this;
 	}
