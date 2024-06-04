@@ -180,7 +180,7 @@ class PackageConfig
 	 */
 	protected function trimNamespace(string $namespace): string
 	{
-		return Str::trim($namespace, '\\');
+		return trim($namespace, '\\');
 	}
 
 	/**
@@ -228,7 +228,7 @@ class PackageConfig
 	 */
 	public function concatPath(string $path): string
 	{
-		return $this->basePath.Str::ltrim($path, '/');
+		return $this->basePath.ltrim($path, '/');
 	}
 
 	/**

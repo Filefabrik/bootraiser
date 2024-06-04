@@ -20,7 +20,8 @@ class FindBootable
 	{
 		$className = 'Boot'.Str::ucfirst($bootableComponentName);
 		/** @var class-string<BootableComponentInterface> $namespace */
-		$namespace = Str::rtrim(BootableComponentInterface::class, 'BootableComponentInterface').$className;
+
+        $namespace =   Str::replaceEnd('BootableComponentInterface','',BootableComponentInterface::class).$className;
 		// todo instance of BootableComponentInterface
 		if (class_exists($namespace)) {
 			return new $namespace();
