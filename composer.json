@@ -1,6 +1,6 @@
 {
     "name": "filefabrik/bootraiser",
-    "version": "1.0.15",
+    "version": "1.0.16",
     "description": "Laravel boot helper for custom packages",
     "type": "library",
     "license": "MIT",
