@@ -80,7 +80,7 @@ class YourPackageServiceProvider extends ServiceProvider
 		];
  
         /* Easy boot utility. You can replace all the booted service/parts with your own*/
-       $this->bootraiserBoot($bootraiserPackage,$bootParts);
+       $this->bootraiserBoot($bootParts);
     }
 
 }
