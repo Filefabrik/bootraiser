@@ -443,5 +443,6 @@ todo describe db seeder (with "")
 * todo migrations
 * own migrations such as bootraiser:migrate
 * display packages migrations, allow refresh with paths from selecting. with display the console command. during package development, table migrations are often changed 
-* bootraiser should become a "once" method with them EventServiceProvider or FancyServiceProvider can not call the same "booting" command again
+* bootraiser should become a "once" method with them EventServiceProvider or FancyServiceProvider cannot call the same "booting" command again
 * a global config outside the package with this, developers are able to disable or enable "boot" methods they are hardcoded in the package.
+* split load migrations from publishing migrations 
