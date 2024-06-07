@@ -6,6 +6,8 @@
 
 namespace Filefabrik\Bootraiser\Support;
 
+use Filefabrik\Bootraiser\Support\Str\Namespacering;
+use Filefabrik\Bootraiser\Support\Str\Pathering;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use UnexpectedValueException;
@@ -15,239 +17,234 @@ use UnexpectedValueException;
  */
 class PackageConfig
 {
-	use PackageConfigDataTrait;
+    use PackageConfigDataTrait;
 
-	/**
-	 * @var string|null
-	 */
-	private ?string $groupName = null;
+    /**
+     * @var string|null
+     */
+    private ?string $groupName = null;
 
-	/**
-	 * @var string
-	 */
-	private string $basePath;
+    /**
+     * @var string
+     */
+    private string $basePath;
 
-	/**
-	 * @var string
-	 */
-	private string $vendorPackageName;
+    /**
+     * @var string
+     */
+    private string $vendorPackageName;
 
-	/**
-	 * @var string
-	 */
-	private string $namespace;
+    /**
+     * @var string
+     */
+    private string $namespace;
 
-	/**
-	 * @param string $basePath
-	 * @param string $vendorPackageName
-	 * @param string $namespace
-	 */
-	public function __construct(string $basePath, string $vendorPackageName, string $namespace)
-	{
-		$this->setBasePath($basePath)
-			 ->setNamespace($namespace)
-			 ->setVendorPackageName($vendorPackageName)
-		;
-	}
+    /**
+     * @param string $basePath
+     * @param string $vendorPackageName
+     * @param string $namespace
+     */
+    public function __construct(string $basePath, string $vendorPackageName, string $namespace)
+    {
+        $this->setBasePath($basePath)
+             ->setNamespace($namespace)
+             ->setVendorPackageName($vendorPackageName)
+        ;
+    }
 
-	/**
-	 * @param $config
-	 *
-	 * @return PackageConfig
-	 */
-	public static function from($config): PackageConfig
-	{
-		if ($config instanceof PackageConfig) {
-			return $config;
-		}
-		if ($config instanceof ServiceProvider) {
-			return self::fromServiceProvider($config);
-		}
+    /**
+     * @param $config
+     *
+     * @return PackageConfig
+     */
+    public static function from($config): PackageConfig
+    {
+        if ($config instanceof PackageConfig) {
+            return $config;
+        }
+        if ($config instanceof ServiceProvider) {
+            return self::fromServiceProvider($config);
+        }
 
-		throw new UnexpectedValueException('Bootraiser not properly configured');
-	}
+        throw new UnexpectedValueException('Bootraiser not properly configured');
+    }
 
-	/**
-	 * @param ServiceProvider $serviceProvider
-	 *
-	 * @return PackageConfig
-	 */
-	public static function fromServiceProvider(ServiceProvider $serviceProvider): PackageConfig
-	{
-		$cls              = new \ReflectionClass($serviceProvider);
-		$isLaravel        = false;
-		$srcPackageStarts = dirname(pathinfo($cls->getFileName(), PATHINFO_DIRNAME));
+    /**
+     * @param ServiceProvider $serviceProvider
+     *
+     * @return PackageConfig
+     */
+    public static function fromServiceProvider(ServiceProvider $serviceProvider): PackageConfig
+    {
+        $cls              = new \ReflectionClass($serviceProvider);
+        $isLaravel        = false;
 
-		if (str_ends_with($srcPackageStarts, '/src')) {
-			// regular package
-			$packageStart = Str::replaceEnd('/src', '', $srcPackageStarts);
-		} elseif (str_ends_with($srcPackageStarts, '/app')) {
-			// laravel main package
-			$packageStart = Str::replaceEnd('/app', '', $srcPackageStarts);
-			$isLaravel    = true;
-		} else {
-			throw new UnexpectedValueException('Package can not be auto-detected');
-		}
+        // todo testing!
+        // todo location from where the service called from
+        $srcPackageStarts = dirname(pathinfo($cls->getFileName(), PATHINFO_DIRNAME));
 
-		$relPackageDirectory = Str::replaceStart(base_path(), '', $packageStart);
+        if (str_ends_with($srcPackageStarts, '/src')) {
+            // regular package
+            $packageStart = Str::replaceEnd('/src', '', $srcPackageStarts);
+        }
+        elseif (str_ends_with($srcPackageStarts, '/app')) {
+            // laravel main package
+            $packageStart = Str::replaceEnd('/app', '', $srcPackageStarts);
+            $isLaravel    = true;
+        }
+        else {
+            throw new UnexpectedValueException('Package can not be auto-detected');
+        }
 
-		$packageName = Str::afterLast($relPackageDirectory, '/');
+        $relPackageDirectory = Str::replaceStart(base_path(), '', $packageStart);
 
-		$packageNamespace = Str::replace(
-			'\\Providers',
-			'',
-			$cls->getNamespaceName()
-		);
+        $packageName = Str::afterLast($relPackageDirectory, '/');
 
-		$package = new PackageConfig(
-			$packageStart,
-			$packageName,
-			$packageNamespace
-		);
+        $packageNamespace = Str::replace(
+            '\\Providers',
+            '',
+            $cls->getNamespaceName(),
+        );
 
-		if ($isLaravel) {
-			$package->setVendorPackageName('Laravel');
-		}
+        $package = new PackageConfig(
+            $packageStart,
+            $packageName,
+            $packageNamespace,
+        );
 
-		return $package;
-	}
+        if ($isLaravel) {
+            $package->setVendorPackageName('Laravel');
+        }
 
-	/**
-	 * @return string
-	 */
-	public function getBasePath(): string
-	{
-		return $this->basePath;
-	}
+        return $package;
+    }
 
-	/**
-	 * @param string $basePath
-	 *
-	 * @return $this
-	 */
-	public function setBasePath(string $basePath): static
-	{
-        // todo with pathering
-		$this->basePath = realpath(rtrim($basePath, '/')).'/';
+    /**
+     * @return string
+     */
+    public function getBasePath(): string
+    {
+        return $this->basePath;
+    }
 
-		return $this;
-	}
+    /**
+     * @param string $basePath
+     *
+     * @return $this
+     */
+    public function setBasePath(string $basePath): static
+    {
+        $this->basePath = Pathering::withEnd(realpath($basePath));
 
-	/**
-	 * @return string
-	 */
-	public function getVendorPackageName(): string
-	{
-		return $this->vendorPackageName;
-	}
+        return $this;
+    }
 
-	/**
-	 * @param string $vendorPackageName
-	 *
-	 * @return $this
-	 */
-	public function setVendorPackageName(string $vendorPackageName): static
-	{
-		$this->vendorPackageName = $this->modifyName($vendorPackageName);
+    /**
+     * @return string
+     */
+    public function getVendorPackageName(): string
+    {
+        return $this->vendorPackageName;
+    }
 
-		return $this;
-	}
+    /**
+     * @param string $vendorPackageName
+     *
+     * @return $this
+     */
+    public function setVendorPackageName(string $vendorPackageName): static
+    {
+        $this->vendorPackageName = $this->modifyName($vendorPackageName);
 
-	/**
-	 * @return string
-	 */
-	public function getNamespace(): string
-	{
-		return $this->namespace;
-	}
+        return $this;
+    }
 
-	/**
-	 * @param string $namespace
-	 *
-	 * @return $this
-	 */
-	public function setNamespace(string $namespace): static
-	{
-		$this->namespace = $this->trimNamespace($namespace, ).'\\';
+    /**
+     * @return string
+     */
+    public function getNamespace(): string
+    {
+        return $this->namespace;
+    }
 
-		return $this;
-	}
+    /**
+     * @param string $namespace
+     *
+     * @return $this
+     */
+    public function setNamespace(string $namespace): static
+    {
+        $this->namespace = Namespacering::withEnd($namespace);
 
-	/**
-	 * @param string $namespace
-	 *
-	 * @return string
-	 */
-	protected function trimNamespace(string $namespace): string
-	{
-		return trim($namespace, '\\');
-	}
+        return $this;
+    }
 
-	/**
-	 * @param string $name
-	 *
-	 * @return string
-	 */
-	protected function modifyName(string $name): string
-	{
-		return Str::lower($name);
-	}
 
-	/**
-	 * @return string|null
-	 */
-	public function getGroupName(): ?string
-	{
-		return $this->groupName;
-	}
+    /**
+     * @param string $name
+     *
+     * @return string
+     */
+    protected function modifyName(string $name): string
+    {
+        return Str::lower($name);
+    }
 
-	/**
-	 * @return string
-	 */
-	public function groupOrVendorName()
-	{
-		return $this->getGroupName() ?? $this->getVendorPackageName();
-	}
+    /**
+     * @return string|null
+     */
+    public function getGroupName(): ?string
+    {
+        return $this->groupName;
+    }
 
-	/**
-	 * @param string $groupName
-	 *
-	 * @return $this
-	 */
-	public function setGroupName(string $groupName): PackageConfig
-	{
-		$this->groupName = $this->modifyName($groupName);
+    /**
+     * @return string
+     */
+    public function groupOrVendorName(): string
+    {
+        return $this->getGroupName() ?? $this->getVendorPackageName();
+    }
 
-		return $this;
-	}
+    /**
+     * @param string $groupName
+     *
+     * @return $this
+     */
+    public function setGroupName(string $groupName): PackageConfig
+    {
+        $this->groupName = $this->modifyName($groupName);
 
-	/**
-	 * @param string $path
-	 *
-	 * @return string
-	 */
-	public function concatPath(string $path): string
-	{
-		return $this->basePath.ltrim($path, '/');
-	}
+        return $this;
+    }
 
-	/**
-	 * @param string $namespace
-	 *
-	 * @return string
-	 */
-	public function concatNamespace(string $namespace): string
-	{
-		return $this->namespace.$this->trimNamespace($namespace);
-	}
+    /**
+     * @param string $path
+     *
+     * @return string
+     */
+    public function concatPackagePath(... $path): string
+    {
+        return Pathering::concat($this->basePath, ...$path);
+    }
 
-	/**
-	 * @param string $groupName
-	 *
-	 * @return string
-	 */
-	public function concatGroupName(string $groupName): string
-	{
-		return $this->groupOrVendorName().'-'.$groupName;
-	}
+    /**
+     * @param string $namespace
+     *
+     * @return string
+     */
+    public function concatPackageNamespace(...$namespace): string
+    {
+        return Namespacering::concat($this->namespace, ...$namespace);
+    }
+
+    /**
+     * @param string $groupName
+     *
+     * @return string
+     */
+    public function concatGroupName(string $groupName): string
+    {
+        return $this->groupOrVendorName() . '-' . $groupName;
+    }
 }

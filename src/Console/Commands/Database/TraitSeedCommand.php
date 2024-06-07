@@ -90,7 +90,7 @@ trait TraitSeedCommand
 					$packageSeeders = $suggest->getPackageSeeders($package);
 
 					if ($packageSeeders->get('DatabaseSeeder')) {
-						$seederClass = $package->concatNamespace('Database\Seeders\DatabaseSeeder');
+						$seederClass = $package->concatPackageNamespace('Database\Seeders\DatabaseSeeder');
 
 						$this->seedClass($seederClass);
 					}
@@ -117,6 +117,7 @@ trait TraitSeedCommand
 				// searching the wanted seeder class in files
 				$foundClass = false;
 				foreach ($availableSubSeeders as $namespace) {
+                    // todo check concat for class option
 					if (Str::endsWith('\\'.$classOption, $namespace)) {
 						$this->seedClass($namespace);
 						$foundClass = true;
@@ -133,7 +134,7 @@ trait TraitSeedCommand
 
 			// only the package DatabaseSeeder
 			if ($package && count($package->getConfig('DatabaseSeeder'))) {
-				$seederClass = $package->concatNamespace('Database\Seeders\DatabaseSeeder');
+				$seederClass = $package->concatPackageNamespace('Database\Seeders\DatabaseSeeder');
 				if (class_exists($seederClass)) {
 					$this->seedClass($seederClass);
 				}

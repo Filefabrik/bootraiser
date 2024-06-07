@@ -9,6 +9,7 @@ namespace Filefabrik\Bootraiser;
 use Exception;
 use Filefabrik\Bootraiser\Support\FindBootable;
 use Filefabrik\Bootraiser\Support\PackageConfig;
+use Filefabrik\Bootraiser\Support\Str\Pathering;
 use Generator;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Command;
@@ -188,7 +189,7 @@ trait Bootraiser
     protected function bootingRoutes(?PackageConfig $packageConfig = null): void
     {
         $packageConfig ??= $this->bootraiserPackage();
-        $routeFiles    = $packageConfig->concatPath('routes/web.php');
+        $routeFiles    = $packageConfig->concatPackagePath('routes/web.php');
         if (file_exists($routeFiles)) {
             $parentServiceProvider = $this->parentServiceProvider();
             $overrideRoutePath     = base_path('/routes/web-' . $packageConfig->groupOrVendorName() . '.php');
@@ -223,7 +224,7 @@ trait Bootraiser
     protected function bootingMigrations(?PackageConfig $packageConfig = null): void
     {
         $packageConfig ??= $this->bootraiserPackage();
-        $migrationDir  = $packageConfig->concatPath('database/migrations');
+        $migrationDir  = $packageConfig->concatPackagePath('database/migrations');
 
         if (is_dir($migrationDir)) {
             $pp = $this->parentServiceProvider();
@@ -263,7 +264,7 @@ trait Bootraiser
      */
     protected function integrateMigrations(?PackageConfig $packageConfig = null): void
     {
-        $migrationDir = ($packageConfig ?? $this->bootraiserPackage())->concatPath('database/migrations');
+        $migrationDir = ($packageConfig ?? $this->bootraiserPackage())->concatPackagePath('database/migrations');
         if (is_dir($migrationDir)) {
             // not need to publish migrations.
             // migrations are available directly from package
@@ -298,7 +299,7 @@ trait Bootraiser
     protected function bootingTranslations(?PackageConfig $packageConfig = null): void
     {
         $packageConfig ??= $this->bootraiserPackage();
-        $langDir       = $packageConfig->concatPath('lang');
+        $langDir       = $packageConfig->concatPackagePath('lang');
         if (is_dir($langDir)) {
             $serviceProvider = $this->parentServiceProvider();
             $serviceProvider->loadTranslationsFrom($langDir, $packageConfig->getVendorPackageName());
@@ -320,12 +321,12 @@ trait Bootraiser
     protected function bootingViews(?PackageConfig $packageConfig = null): void
     {
         $packageConfig ??= $this->bootraiserPackage();
-        $viewsDir      = $packageConfig->concatPath('resources/views');
+        $viewsDir      = $packageConfig->concatPackagePath('resources/views');
         if (is_dir($viewsDir)) {
             $serviceProvider = $this->parentServiceProvider();
             $serviceProvider->loadViewsFrom($viewsDir, $packageConfig->getNamespace());
             $serviceProvider->publishes(
-                [$viewsDir => resource_path('views/vendor/' . $packageConfig->getVendorPackageName())],
+                [$viewsDir => resource_path(Pathering::concat('views/vendor', $packageConfig->getVendorPackageName()) )],
                 $packageConfig->concatGroupName('views'),
             );
 
@@ -334,7 +335,7 @@ trait Bootraiser
                 function(ViewFactory $view_factory) use ($packageConfig) {
                     $view_factory->addNamespace(
                         $packageConfig->getVendorPackageName(),
-                        $packageConfig->concatPath('resources/views'),
+                        $packageConfig->concatPackagePath('resources/views'),
                     );
                 },
             );
@@ -351,7 +352,8 @@ trait Bootraiser
     protected function bootingCommands(?PackageConfig $packageConfig = null): void
     {
         $packageConfig ??= $this->bootraiserPackage();
-        $commandDir    = $packageConfig->concatPath('src/Console/Commands');
+        // does not boot /app commands they are booted by laravel core
+        $commandDir    = $packageConfig->concatPackagePath('src/Console/Commands');
         if (app()->runningInConsole() && is_dir($commandDir)) {
             $finder = Finder::create()
                             ->files()
@@ -361,7 +363,7 @@ trait Bootraiser
 
             foreach ($finder->getIterator() as $file) {
                 $cls     = $file->getBasename('.php');
-                $command = $packageConfig->concatNamespace('Console\\Commands\\' . $cls);
+                $command = $packageConfig->concatPackageNamespace('Console\Commands' , $cls);
 
                 if (is_subclass_of($command, Command::class) && !(new ReflectionClass($command))->isAbstract()) {
                     Artisan::starting(fn(Artisan $artisan) => $artisan->resolve($command));
@@ -424,7 +426,7 @@ trait Bootraiser
      */
     protected function helperConfigFiles(?PackageConfig $packageConfig = null): ?string
     {
-        $configFile = ($packageConfig ?? $this->bootraiserPackage())->concatPath('config/config.php');
+        $configFile = ($packageConfig ?? $this->bootraiserPackage())->concatPackagePath('config/config.php');
 
         return is_file($configFile) ? $configFile : null;
     }

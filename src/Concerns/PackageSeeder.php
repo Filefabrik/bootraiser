@@ -63,7 +63,7 @@ class PackageSeeder
 			foreach ($databaseSubSeeder?->getIterator() ?? [] as $file) {
 				// todo check is seeder class
 				$cls       = $file->getBasename('.php');
-				$namespace = $this->config->concatNamespace('Database\\Seeders\\'.$cls);
+				$namespace = $this->config->concatPackageNamespace('Database\Seeders',$cls);
 				// all other seeders
 				$seeders[] = $namespace;
 			}
@@ -79,7 +79,7 @@ class PackageSeeder
 	 */
 	protected function getPath(): ?string
 	{
-		$seedersDir = $this->config->concatPath($this->relDir);
+		$seedersDir = $this->config->concatPackagePath($this->relDir);
 
 		return is_dir($seedersDir) ? $seedersDir : null;
 	}

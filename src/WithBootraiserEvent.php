@@ -54,8 +54,9 @@ trait WithBootraiserEvent
 	 */
 	protected function eventDiscoveryBasePath(): ?string
 	{
+        // todo check is app(laravel base) or /src package
 		return $this->bootraiserPackage()
-					?->concatPath('src')
+					?->concatPackagePath('src')
 		;
 	}
 
@@ -73,11 +74,11 @@ trait WithBootraiserEvent
 	public static function getBootraiserEventDiscovery(): \Closure
 	{
 		return function(SplFileInfo $file, $basePath) {
-			$ck  = get_called_class();
+
 			$cfg = BootraiserManager::searchPackage($file->getRealPath());
 			if ($cfg) {
 				$class = $cfg
-					->concatNamespace('Listeners\\'.$file->getBasename('.php'))
+					->concatPackageNamespace('Listeners',$file->getBasename('.php'))
 				;
 				if (class_exists($class)) {
 					return $class;
