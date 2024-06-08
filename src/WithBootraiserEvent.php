@@ -8,6 +8,7 @@ namespace Filefabrik\Bootraiser;
 
 use Exception;
 use Filefabrik\Bootraiser\Support\PackageConfig;
+use Filefabrik\Bootraiser\Support\Str\Namespacering;
 use Illuminate\Foundation\Events\DiscoverEvents;
 use Illuminate\Support\Str;
 use SplFileInfo;
@@ -73,6 +74,7 @@ trait WithBootraiserEvent
 
 	public static function getBootraiserEventDiscovery(): \Closure
 	{
+        // todo move out it is only a file-finder
 		return function(SplFileInfo $file, $basePath) {
 
 			$cfg = BootraiserManager::searchPackage($file->getRealPath());
@@ -89,8 +91,8 @@ trait WithBootraiserEvent
 			$class = trim(Str::replaceFirst($basePath, '', $file->getRealPath()), DIRECTORY_SEPARATOR);
 
 			return str_replace(
-				[DIRECTORY_SEPARATOR, ucfirst(basename(app()->path())).'\\'],
-				['\\', app()->getNamespace()],
+				[DIRECTORY_SEPARATOR, ucfirst(basename(app()->path())).Namespacering::Divider],
+				[Namespacering::Divider, app()->getNamespace()],
 				ucfirst(Str::replaceLast('.php', '', $class)),
 			);
 		};

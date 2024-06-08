@@ -47,6 +47,7 @@ trait Bootraiser
             return $this->bootraiserPackage;
         }
         // for each package only one instance, if need create another method to handle the full namespaced ServiceProviders
+        // to alternative methods to check, that called is a Service Provider
         $packageName = Str::beforeLast(static::class, '\\Support\\');
 
         return $this->bootraiserPackage = BootraiserManager::getPackageConfig($packageName, $config ?? $this);
@@ -192,6 +193,7 @@ trait Bootraiser
         $routeFiles    = $packageConfig->concatPackagePath('routes/web.php');
         if (file_exists($routeFiles)) {
             $parentServiceProvider = $this->parentServiceProvider();
+            // todo custom output format for packages as developers preferences
             $overrideRoutePath     = base_path('/routes/web-' . $packageConfig->groupOrVendorName() . '.php');
             // use override route
             // todo make override and original route load if need. Otherwise override is override
