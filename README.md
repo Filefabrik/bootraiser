@@ -52,7 +52,6 @@ YourPackageServiceProvider.php file looks like this:
 namespace YourCompanyVendor\YourPackage\Providers;
 
 use Filefabrik\Bootraiser\WithBootraiser;
-use Filefabrik\Bootraiser\Support\PackageConfig;
 use Illuminate\Support\ServiceProvider;
 
 class YourPackageServiceProvider extends ServiceProvider
@@ -315,7 +314,6 @@ While using in YourServiceProvider the register(), and boot() methods use a bett
 namespace YourCompanyVendor\YourPackage\Providers;
 
 use Filefabrik\Bootraiser\WithBootraiser;
-use Filefabrik\Bootraiser\Support\PackageConfig;
 use Illuminate\Support\ServiceProvider;
 
 class YourPackageServiceProvider extends ServiceProvider
