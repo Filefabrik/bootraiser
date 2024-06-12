@@ -61,6 +61,7 @@ class YourPackageServiceProvider extends ServiceProvider
 
     public function register()
     {
+        $this->bootraiserRegister('Config');
     }
 
     public function boot(): void
@@ -72,8 +73,7 @@ class YourPackageServiceProvider extends ServiceProvider
 			'Migrations',
 			'Translations',
 			'Views',
-			'Commands', 
-			'Config',
+			'Commands',
             // 3rd Party package
 			'Livewire',
 		];
@@ -120,7 +120,6 @@ public function boot(): void
        $bootParts2 = [
             'Views',
             'Commands',
-            'Config',
             // 3rd Party package
             'Livewire',
             ];
@@ -349,7 +348,6 @@ class YourPackageServiceProvider extends ServiceProvider
        $bootParts2 = [
             'Views',
             'Commands',
-            'Config',
             // 3rd Party package
             'Livewire',
             ];
@@ -386,7 +384,7 @@ class BootraiserDemoEventServiceProvider extends EventServiceProvider
     {
         // call parent::register() is mandatory!
         parent::register();
-        $this->bootraiserRegister('Events');
+        $this->bootraiserRegister('Config','Events');
     }
 }
 
