@@ -35,7 +35,7 @@ class BootraiserManager
 	/**
 	 * todo make something other which is configurable
 	 */
-	public static function getPackageConfig(string|Package|ServiceProvider $config = null): Package
+	public static function getPackageConfig(null|string|Package|ServiceProvider $config = null): Package
 	{
 		// todo make package config based upon the real namespace or/and for the real package
 		// todo otherwise multiple ServiceProviders create there own Namespace
